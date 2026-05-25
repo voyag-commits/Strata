@@ -1,6 +1,8 @@
 # Strata
 A public conceptual specification for context managed agent operations. It wraps Codex App into operating multiple disposable worker sessions, with human-governed promotion between layers.
 
+Desktop App will be released soon.
+
 - **[SPEC.md](SPEC.md)** — the model.
 - **[NOTES.md](NOTES.md)** — license, scope, patent, governance, citation, changelog.
 
