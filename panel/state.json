@@ -1,0 +1,17 @@
+{
+  "active_classb_count": 0,
+  "current_branch": "main",
+  "gate_status": "active",
+  "gitea_repo_url": null,
+  "latest_classb_entry": null,
+  "latest_mutation_id": "M-000001",
+  "pending_approvals": [],
+  "rejected_reports": [],
+  "repo": "C:\\Users\\hou16\\Downloads\\strata-governance-substrate\\governance-repo",
+  "session_packets": [
+    "P-0001-worker.md",
+    "P-0002-reviewer.md",
+    "P-0003-ic.md"
+  ],
+  "status": "ok"
+}
