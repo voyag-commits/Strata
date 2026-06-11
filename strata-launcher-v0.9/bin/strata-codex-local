@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Strata BYOR launcher for WSL/tmux acceptance.
+# Owns only local runtime startup; Strata package remains bridge-agnostic.
+
+NODE_BIN="/home/hou16/.nvm/versions/node/v22.17.1/bin"
+BRIDGE_DIR="/home/hou16/strata/bridge/bridge"
+BRIDGE_ENTRY="$BRIDGE_DIR/dist/src/index.js"
+BRIDGE_ENV="$BRIDGE_DIR/.env"
+BRIDGE_LOG="/home/hou16/.codex-deepseek/wsl-bridge.log"
+BRIDGE_ERR="/home/hou16/.codex-deepseek/wsl-bridge.err"
+BRIDGE_PID="/home/hou16/.codex-deepseek/wsl-bridge.pid"
+PROFILE_NAME="${CODEX_PROFILE_NAME:-deepseek_bridge}"
+PORT="${PORT:-38441}"
+
+export PATH="$NODE_BIN:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+export NO_PROXY="localhost,127.0.0.1,::1,${NO_PROXY:-}"
+export no_proxy="$NO_PROXY"
+export UPSTREAM_PROXY_URL="${UPSTREAM_PROXY_URL:-${HTTPS_PROXY:-${https_proxy:-${HTTP_PROXY:-${http_proxy:-}}}}}"
+
+load_env_file() {
+  if [[ ! -f "$BRIDGE_ENV" ]]; then
+    echo "missing WSL bridge env: $BRIDGE_ENV" >&2
+    exit 20
+  fi
+
+  while IFS='=' read -r key value; do
+    key="${key//$'\r'/}"
+    key="${key#$'\xef\xbb\xbf'}"
+    value="${value//$'\r'/}"
+    [[ -z "$key" || "${key:0:1}" == "#" ]] && continue
+    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    export "$key=$value"
+  done < "$BRIDGE_ENV"
+
+  PORT="${PORT:-38441}"
+  if [[ -z "${BRIDGE_AUTH_KEY:-}" ]]; then
+    echo "BRIDGE_AUTH_KEY missing from WSL bridge env" >&2
+    exit 21
+  fi
+}
+
+bridge_ready() {
+  curl -fs --noproxy "localhost,127.0.0.1,::1" --max-time 3 "http://127.0.0.1:${PORT}/health" >/dev/null
+}
+
+start_bridge() {
+  if [[ ! -f "$BRIDGE_ENTRY" ]]; then
+    echo "WSL bridge entry missing, building: $BRIDGE_ENTRY" >&2
+    (cd "$BRIDGE_DIR" && npm run build)
+  fi
+
+  mkdir -p "$(dirname "$BRIDGE_LOG")"
+  rm -f "$BRIDGE_LOG" "$BRIDGE_ERR"
+  (cd "$BRIDGE_DIR" && setsid nohup node "$BRIDGE_ENTRY" >"$BRIDGE_LOG" 2>"$BRIDGE_ERR" < /dev/null & echo "$!" > "$BRIDGE_PID")
+
+  for _ in $(seq 1 50); do
+    if bridge_ready; then
+      if [[ -s "$BRIDGE_PID" ]] && kill -0 "$(cat "$BRIDGE_PID")" 2>/dev/null; then
+        return 0
+      fi
+      echo "WSL bridge became ready but process is not alive" >&2
+      break
+    fi
+    if [[ -s "$BRIDGE_PID" ]] && ! kill -0 "$(cat "$BRIDGE_PID")" 2>/dev/null; then
+      echo "WSL bridge process exited before readiness" >&2
+      break
+    fi
+    sleep 0.5
+  done
+
+  for _ in $(seq 1 4); do
+    if bridge_ready; then
+      return 0
+    fi
+    sleep 0.5
+  done
+
+  echo "WSL bridge did not become ready on port $PORT" >&2
+  tail -n 20 "$BRIDGE_LOG" >&2 2>/dev/null || true
+  tail -n 20 "$BRIDGE_ERR" >&2 2>/dev/null || true
+  exit 22
+}
+
+load_env_file
+
+if ! bridge_ready; then
+  start_bridge
+fi
+
+exec codex --profile "$PROFILE_NAME" "$@"

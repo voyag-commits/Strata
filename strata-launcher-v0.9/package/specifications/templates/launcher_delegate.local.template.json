@@ -1,0 +1,12 @@
+{
+  "contract_id": "strata.runtime_edge.launcher_delegate_config.v1",
+  "provider_name": "local_codex_deepseek_launcher",
+  "mode": "exec",
+  "launcher_command": "/home/<you>/bin/strata-codex-local",
+  "launcher_args": [],
+  "working_directory": null,
+  "healthcheck_args": ["--version"],
+  "env_passthrough": ["PATH", "HOME", "USER", "WSL_DISTRO_NAME"],
+  "secret_policy": "externalized_no_secret_material_in_package",
+  "notes": "This file points to the actual local launcher. Do not put API keys here."
+}

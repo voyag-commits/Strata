@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# Strata Desktop Launcher — always opens a new session
+# Every shortcut click = new tmux session + new name
+
+WORKDIR="${STRATA_DESKTOP_CODEX_WORKDIR:-/mnt/c/Users/hou16/Downloads/Codex_CLI_agent fleet/strata_runtime_edge_launcher_delegate_component2_3_v0_9/strata_runtime_edge_launcher_delegate_component2_3_v0_9}"
+LAUNCHER="/home/hou16/bin/strata-codex-local"
+STAMP="$(date +%m%d-%H%M%S)"
+
+SESSION="STRATA-DESKTOP-${STAMP}"
+
+tmux new-session -d -s "$SESSION" -c "$WORKDIR" "$LAUNCHER"
+
+tmux set-option -t "$SESSION" status on
+tmux set-option -t "$SESSION" status-position top
+tmux set-option -t "$SESSION" status-left-length 100
+tmux set-option -t "$SESSION" status-left '#[fg=black,bg=green,bold] WSL/TMUX #[fg=white,bg=blue] session: #S #[default] '
+tmux set-option -t "$SESSION" status-right '#[fg=white,bg=red] Linux Codex BYOR DeepSeek #[default] %H:%M'
+tmux rename-window -t "${SESSION}:0" "Codex-TUI"
+
+exec tmux attach-session -t "$SESSION"

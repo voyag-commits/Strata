@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# ========================================================
+# Strata Fleet Launcher — stable WSL CLI entrypoint
+# Launches N visible tmux/Codex CLI sessions as a fleet.
+#
+# Usage:
+#   strata-fleet-launch FLEET-A FLEET-B FLEET-C
+#   strata-fleet-launch --count 3
+#   strata-fleet-launch --role worker --assignments A001 A002 A003
+#   strata-fleet-launch --help
+# ========================================================
+
+PAYLOAD_DIR="/mnt/c/users/hou16/downloads/codex_cli_agent fleet/strata_runtime_edge_launcher_delegate_component2_3_v0_9/strata_runtime_edge_launcher_delegate_component2_3_v0_9"
+CLI="node dist/src/cli.js"
+ROLE="${STRATA_FLEET_ROLE:-ic}"
+ASSIGN_ID_LIST=()
+LAUNCH_OPTS=()
+POSITIONAL=()
+
+help() {
+  cat <<'HELP'
+Strata Fleet Launcher
+=====================
+Launch multiple visible Codex CLI sessions via tmux + Windows Terminal.
+
+Usage:
+  strata-fleet-launch [--role ROLE] ASSIGNMENT_ID...
+  strata-fleet-launch --count N [--prefix PREFIX] [--role ROLE]
+  strata-fleet-launch --help
+
+Options:
+  --role ROLE          Role for sessions (default: ic)
+  --assignments A B C  Assignment IDs
+  --count N            Auto-generate N assignments
+  --prefix PREFIX      Prefix for generated IDs (default: FLEET)
+  --layout LETTER|NUM  Use letters or numbers for suffix (default: letter)
+  --replace            Replace existing sessions (default: on)
+  --no-replace         Do not replace
+  --no-tab             Headless only (no Windows Terminal)
+  --help               Show this message
+
+Environment:
+  STRATA_FLEET_ROLE    Default role
+
+Examples:
+  strata-fleet-launch FLEET-A FLEET-B FLEET-C
+  strata-fleet-launch --count 3
+  strata-fleet-launch --role coder --count 2 --prefix DEV --layout number
+HELP
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --role)       ROLE="$2"; shift 2 ;;
+    --assignments) shift; while [[ $# -gt 0 && "$1" != --* ]]; do ASSIGN_ID_LIST+=("$1"); shift; done ;;
+    --count)      COUNT="$2"; shift 2 ;;
+    --prefix)     PREFIX="$2"; shift 2 ;;
+    --layout)     LAYOUT="$2"; shift 2 ;;
+    --replace)    LAUNCH_OPTS+=("--replace"); shift ;;
+    --no-replace) NO_REPLACE=1; shift ;;
+    --no-tab)     HEADLESS=1; shift ;;
+    --help|-h)    help; exit 0 ;;
+    *)            POSITIONAL+=("$1"); shift ;;
+  esac
+done
+
+for arg in "${POSITIONAL[@]}"; do ASSIGN_ID_LIST+=("$arg"); done
+
+COUNT="${COUNT:-0}"
+PREFIX="${PREFIX:-FLEET}"
+LAYOUT="${LAYOUT:-letter}"
+
+if [[ "$COUNT" -gt 0 && ${#ASSIGN_ID_LIST[@]} -eq 0 ]]; then
+  if [[ "$LAYOUT" == "number" ]]; then
+    for ((i=1; i<=COUNT; i++)); do ASSIGN_ID_LIST+=("${PREFIX}-${i}"); done
+  else
+    letters=(A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)
+    for ((i=0; i<COUNT; i++)); do ASSIGN_ID_LIST+=("${PREFIX}-${letters[$i]:-X}"); done
+  fi
+fi
+
+if [[ ${#ASSIGN_ID_LIST[@]} -eq 0 ]]; then
+  echo "Error: no assignments specified. Use --count or provide IDs." >&2
+  help; exit 1
+fi
+
+[[ -z "${NO_REPLACE:-}" ]] && LAUNCH_OPTS+=("--replace")
+
+echo "=== Strata Fleet Launch ==="
+echo "  Payload: $PAYLOAD_DIR"
+echo "  Role:    $ROLE"
+echo "  Count:   ${#ASSIGN_ID_LIST[@]}"
+echo "  Assigns: ${ASSIGN_ID_LIST[*]}"
+echo "  Tabs:    $([ -n "${HEADLESS:-}" ] && echo no || echo yes)"
+echo ""
+
+cd "$PAYLOAD_DIR" || { echo "Error: cannot cd to $PAYLOAD_DIR"; exit 1; }
+
+SUCCESS=0
+FAILED=0
+
+for ASSIGN in "${ASSIGN_ID_LIST[@]}"; do
+  SESSION_NAME="STRATA-${ROLE^^}-${ASSIGN}"
+  printf "  %-30s " "$SESSION_NAME"
+
+  RAW=$(node dist/src/cli.js session launch --role "$ROLE" --assignment-id "$ASSIGN" "${LAUNCH_OPTS[@]}" 2>&1) || true
+
+  TMUX_OK=$(echo "$RAW" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('tmux',{}).get('ok',False))" 2>/dev/null || echo "parse_err")
+  TAB_OK=$( echo "$RAW" | python3 -c "import sys,json; d=json.load(sys.stdin); t=d.get('terminal_tab'); print(t.get('ok','n/a') if t else 'n/a')" 2>/dev/null || echo "n/a")
+
+  if [[ "$TMUX_OK" == "True" ]]; then
+    echo "tmux=OK  tab=$TAB_OK"
+    ((SUCCESS++)) || true
+  else
+    echo "tmux=FAIL($TMUX_OK)  tab=$TAB_OK"
+    ((FAILED++)) || true
+  fi
+done
+
+echo ""
+echo "=== Result: $SUCCESS launched, $FAILED failed ==="
+tmux list-sessions 2>/dev/null | grep "STRATA-" || true

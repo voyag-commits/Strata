@@ -1,0 +1,11 @@
+{
+  "contract_id": "strata.runtime_edge_notice.v1",
+  "commit_sha": "<commit_sha>",
+  "changed_files": ["class_b/entries/B-000001.md"],
+  "report_id": "report_001",
+  "assignment_id": "A001",
+  "worker_id": "coder_001",
+  "nonce": "STRATA_NONCE_A001_DELTA_001",
+  "suggested_command_options": ["strata context export-markdown"],
+  "target_session": "STRATA-IC-A001"
+}

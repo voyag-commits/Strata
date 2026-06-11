@@ -1,0 +1,10 @@
+{
+  "package_id": "strata_runtime_edge_launcher_delegate_component2_3_v0_9",
+  "version": "0.9.0",
+  "replaces": ["strata_runtime_edge_component2_3_v0_8"],
+  "components": ["Component 2", "runtime-edge subset of Component 3"],
+  "pattern": "launcher_delegate_runtime_adapter_stub",
+  "byor": "bring_your_own_runtime_provider",
+  "secret_boundary": "externalized_no_secret_material_in_package",
+  "excludes": ["embedded API keys", "DeepSeek bridge source/build", "Codex binary distribution", "SCTL context authority", "semantic interpretation"]
+}
