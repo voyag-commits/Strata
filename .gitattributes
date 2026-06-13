@@ -1,5 +1,9 @@
 * text=auto
 
+.gitattributes text eol=lf
+LICENSE text eol=lf
+SPEC.md text eol=lf
+
 *.js text eol=lf
 *.json text eol=lf
 *.md text eol=lf
