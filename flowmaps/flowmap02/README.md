@@ -7,13 +7,13 @@ It has no dry-run mode.
 ## Main file
 
 ```text
-scripts/flowmap02/live_cycle_harness.sh
+flowmaps/flowmap02/live_cycle_harness.sh
 ```
 
 Install it under the SCTL package root at:
 
 ```text
-<PACKAGE_ROOT>/scripts/flowmap02/live_cycle_harness.sh
+<REPO_ROOT>/flowmaps/flowmap02/live_cycle_harness.sh
 ```
 
 or run it from any location with `--package-root /absolute/path/to/PACKAGE_ROOT`.
@@ -21,7 +21,7 @@ or run it from any location with `--package-root /absolute/path/to/PACKAGE_ROOT`
 ## Canonical run command
 
 ```bash
-scripts/flowmap02/live_cycle_harness.sh \
+flowmaps/flowmap02/live_cycle_harness.sh \
   --assignment-id A_FLOWMAP_02_007 \
   --package-root "/mnt/c/Users/hou16/Downloads/Codex_CLI_agent fleet/_package_patch_v0_9_4_simplified_runtime/strata_sctl_kernel_components_1_3_4_package_v0_9_4_simplified_runtime" \
   --runtime-edge-root "/mnt/c/Users/hou16/Downloads/Codex_CLI_agent fleet/strata_runtime_edge_launcher_delegate_component2_3_v0_9/strata_runtime_edge_launcher_delegate_component2_3_v0_9" \

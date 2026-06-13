@@ -39,7 +39,7 @@ cd /path/to/strata_sctl_kernel_components_1_3_4_package_v0_9_4_simplified_runtim
 node --version
 npm test
 npm run secret-scan
-bash -n scripts/wsl_tmux/*.sh scripts/wsl_tmux/sctl-*
+for script in scripts/wsl_tmux/sctl-* flowmaps/flowmap02/*.sh scripts/bootstrap_wsl.sh; do bash -n "$script"; done
 ```
 
 Optional runtime-edge health check, when the launcher package is available:

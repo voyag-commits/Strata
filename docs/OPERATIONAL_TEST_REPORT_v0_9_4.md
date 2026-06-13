@@ -5,7 +5,7 @@
 ```bash
 npm test
 npm run secret-scan
-bash -n scripts/wsl_tmux/*.sh scripts/wsl_tmux/sctl-*
+for script in scripts/wsl_tmux/sctl-* flowmaps/flowmap02/*.sh scripts/bootstrap_wsl.sh; do bash -n "$script"; done
 scripts/wsl_tmux/sctl-fleet-smoke --workspace <temp-workspace>
 ```
 

@@ -112,6 +112,11 @@ The adapter boundary follows the provided launcher guide: SCTL calls the runtime
 ```bash
 npm test
 npm run secret-scan
-bash -n scripts/wsl_tmux/*.sh scripts/wsl_tmux/sctl-*
 sha256sum -c PACKAGE_CHECKSUMS.sha256
+```
+
+From WSL, the same checks can be run with one command:
+
+```bash
+bash scripts/bootstrap_wsl.sh
 ```

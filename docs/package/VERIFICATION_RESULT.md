@@ -10,7 +10,7 @@ Commands run from `strata_sctl_kernel_components_1_3_4_package_v0_9_4_simplified
 ```bash
 npm test
 npm run secret-scan
-for script in scripts/wsl_tmux/sctl-* scripts/flowmap02/*.sh; do
+for script in scripts/wsl_tmux/sctl-* flowmaps/flowmap02/*.sh; do
   [ -f "$script" ] || continue
   bash -n "$script"
 done

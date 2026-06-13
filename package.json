@@ -4,7 +4,7 @@
   "description": "Strata SCTL kernel with deterministic Class C plus Class A/B context dispatch envelopes, simplified revision math, disposable session policy, Git-backed trace records, and thin WSL/tmux adapter scripts.",
   "type": "module",
   "private": true,
-  "license": "MIT",
+  "license": "Apache-2.0",
   "bin": {
     "sctl": "src/cli.js",
     "strata-sctl": "src/cli.js"
@@ -13,7 +13,8 @@
     "start": "node src/cli.js",
     "sctl": "node src/cli.js",
     "test": "node --test tests/*.test.js",
-    "secret-scan": "node src/cli.js secret-scan --workspace ."
+    "secret-scan": "node src/cli.js secret-scan --workspace .",
+    "bootstrap:wsl": "bash scripts/bootstrap_wsl.sh"
   },
   "dependencies": {},
   "devDependencies": {},

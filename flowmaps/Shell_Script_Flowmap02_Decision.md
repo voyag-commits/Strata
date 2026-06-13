@@ -1,4 +1,4 @@
-./scripts/flowmap02/live_cycle_harness.sh \
+./flowmaps/flowmap02/live_cycle_harness.sh \
 
   --assignment-id A_FLOWMAP_02_006 \
 

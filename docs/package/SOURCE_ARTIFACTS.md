@@ -11,5 +11,5 @@ Assembled from preserved local artifacts:
 
 Assembly notes:
 - The baseline SCTL package was expanded first.
-- The preserved multicycle Flowmap 02 harness was copied into `scripts/flowmap02/` and also retained as `flowmap02_harness_multicycle/`.
+- The preserved multicycle Flowmap 02 harness was copied into `flowmaps/flowmap02/` for this repository layout.
 - No files from the discarded compact Class B export experiment were used.

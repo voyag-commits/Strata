@@ -6,7 +6,7 @@ RUNTIME_EDGE_ROOT="/mnt/c/Users/hou16/Downloads/Codex_CLI_agent fleet/strata_run
 SCTL_WORKSPACE="/home/hou16/sctl-live-test-A_LIVE_001"
 CODEBASE_REPO="/home/hou16/workspace/AAU_MED_EM_ENSEMBLE_HEATMAP_STUDENT_ASSIGNMENT"
 
-"$PACKAGE_ROOT/scripts/flowmap02/live_cycle_harness.sh" \
+"$PACKAGE_ROOT/flowmaps/flowmap02/live_cycle_harness.sh" \
   --assignment-id A_FLOWMAP_02_006 \
   --package-root "$PACKAGE_ROOT" \
   --runtime-edge-root "$RUNTIME_EDGE_ROOT" \

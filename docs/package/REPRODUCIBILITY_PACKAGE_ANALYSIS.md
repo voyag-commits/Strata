@@ -6,8 +6,7 @@ This package is assembled as the SCTL codebase package, not a live workspace dum
 
 Included:
 - `strata_sctl_kernel_components_1_3_4_package_v0_9_4_simplified_runtime/`: SCTL CLI source, tests, schemas, templates, docs, WSL/tmux adapter scripts, and empty `.strata` workspace skeleton.
-- `strata_sctl_kernel_components_1_3_4_package_v0_9_4_simplified_runtime/scripts/flowmap02/`: preserved multicycle Flowmap 02 live operator harness.
-- `flowmap02_harness_multicycle/`: same preserved harness at top level for operator access.
+- `flowmaps/flowmap02/`: preserved multicycle Flowmap 02 live operator harness in this repository layout.
 - `delivery_docs/`: playbooks and earlier delivery evidence already present in the baseline delivery archive.
 - `SOURCE_ARTIFACTS.md`: source archive provenance and dependency boundary.
 
@@ -49,13 +48,13 @@ Package checks:
 cd strata_sctl_kernel_components_1_3_4_package_v0_9_4_simplified_runtime
 npm test
 npm run secret-scan
-for script in scripts/wsl_tmux/sctl-* scripts/flowmap02/*.sh; do bash -n "$script"; done
+for script in scripts/wsl_tmux/sctl-* flowmaps/flowmap02/*.sh; do bash -n "$script"; done
 ```
 
 Live Flowmap 02 harness:
 ```bash
 cd strata_sctl_kernel_components_1_3_4_package_v0_9_4_simplified_runtime
-scripts/flowmap02/live_cycle_harness.sh \
+flowmaps/flowmap02/live_cycle_harness.sh \
   --assignment-id A_FLOWMAP_02_REPRO \
   --sctl-workspace /absolute/path/to/SCTL_WORKSPACE \
   --codebase-repo /absolute/path/to/CODEBASE_REPO \

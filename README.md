@@ -33,6 +33,30 @@ Strata is not another agent loop. It is a control plane around agent loops.
 * **SCTL Core** — Git-backed context and workflow control-plane implementation.
 * **Flowmap 02** — live trunk-based disposable-worker cycle evidence and operator methodology.
 
+## Quick Verification
+
+From WSL:
+
+```bash
+bash scripts/bootstrap_wsl.sh
+```
+
+The bootstrap runs the Node test suite, SCTL secret scan, shell syntax checks, and package checksum verification.
+
+## Flowmap 02 A007 Evidence
+
+The committed A007 evidence records a three-cycle Delegated Coordinator workflow:
+
+1. Cycle 01: disposable Change Author plus disposable Code Reviewer, approved review, CI passed, ff-only merge, Class B outcome.
+2. Cycle 02: fresh disposable Change Author plus fresh disposable Code Reviewer, approved review, CI passed, ff-only merge, Class B outcome.
+3. Cycle 03: fresh disposable Change Author plus fresh disposable Code Reviewer, approved review, CI passed, ff-only merge, final Class B outcome.
+
+Start with:
+
+* **[cycle_timeline.tsv](examples/operational_logs/flowmap02_A007/cycle_timeline.tsv)** — one-screen cycle summary.
+* **[flowmap02_result.md](examples/operational_logs/flowmap02_A007/flowmap02_result.md)** — run result and diagnosis.
+* **[flowmap02_step_diagnosis.tsv](examples/operational_logs/flowmap02_A007/flowmap02_step_diagnosis.tsv)** — per-step call/result/diagnosis.
+
 ## Runtime Boundary
 
 Strata core is runtime-agnostic.
@@ -50,4 +74,3 @@ License: Apache License 2.0
 Author: Yueqian Hou
 
 Desktop and local operator tooling are under development.
-
