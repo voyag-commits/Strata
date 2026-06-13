@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=_sctl_adapter_common.sh
+source "$SCRIPT_DIR/_sctl_adapter_common.sh"
+
+ASSIGNMENT_ID=""
+ROLE=""
+ID=""
+SESSION_NAME=""
+SESSION_MODE="disposable"
+LAUNCH=1
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --workspace) SCTL_WORKSPACE="$2"; shift 2 ;;
+    --assignment-id) ASSIGNMENT_ID="$2"; shift 2 ;;
+    --role) ROLE="$2"; shift 2 ;;
+    --id) ID="$2"; shift 2 ;;
+    --session-name) SESSION_NAME="$2"; shift 2 ;;
+    --session-mode) SESSION_MODE="$2"; shift 2 ;;
+    --no-launch) LAUNCH=0; shift ;;
+    --help) echo "usage: sctl-session-new --assignment-id A001 --role ROLE --id ID [--session-name TMUX] [--no-launch]"; exit 0 ;;
+    *) usage_error "unknown argument: $1" ;;
+  esac
+done
+
+[ -n "$ASSIGNMENT_ID" ] || usage_error "--assignment-id required"
+[ -n "$ROLE" ] || usage_error "--role required"
+[ -n "$ID" ] || usage_error "--id required"
+[ -n "$SESSION_NAME" ] || SESSION_NAME="$ID"
+
+RUNTIME_STATUS="not_requested"
+if [ "$LAUNCH" -eq 1 ]; then
+  if runtime_edge_cli session launch --role "$ROLE" --assignment-id "$ASSIGNMENT_ID" >/tmp/sctl-runtime-launch.$$ 2>/tmp/sctl-runtime-launch.err.$$; then
+    RUNTIME_STATUS="runtime_edge_launched"
+  elif command -v strata-fleet-launch >/dev/null 2>&1; then
+    strata-fleet-launch --role "$ROLE" --count 1 --prefix "$SESSION_NAME" --layout number >/tmp/sctl-fleet-launch.$$ 2>/tmp/sctl-fleet-launch.err.$$ || RUNTIME_STATUS="fleet_launch_failed"
+    [ "$RUNTIME_STATUS" = "not_requested" ] && RUNTIME_STATUS="fleet_launched"
+  else
+    RUNTIME_STATUS="launcher_unavailable_registration_only"
+  fi
+fi
+
+sctl sessions register \
+  --assignment-id "$ASSIGNMENT_ID" \
+  --role "$ROLE" \
+  --id "$ID" \
+  --session-name "$SESSION_NAME" \
+  --session-mode "$SESSION_MODE"
+
+echo "adapter_runtime_status=$RUNTIME_STATUS" >&2

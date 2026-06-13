@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=_sctl_adapter_common.sh
+source "$SCRIPT_DIR/_sctl_adapter_common.sh"
+
+SESSION=""
+OUT=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --session) SESSION="$2"; shift 2 ;;
+    --out) OUT="$2"; shift 2 ;;
+    --help) echo "usage: sctl-session-capture --session TMUX_SESSION [--out FILE]"; exit 0 ;;
+    *) usage_error "unknown argument: $1" ;;
+  esac
+done
+[ -n "$SESSION" ] || usage_error "--session required"
+[ -n "$OUT" ] || OUT="$SCTL_WORKSPACE/.strata/evidence/session_captures/${SESSION}_$(date -u +%Y%m%dT%H%M%SZ).txt"
+mkdir -p "$(dirname "$OUT")"
+
+if runtime_edge_cli session capture --session "$SESSION" > "$OUT" 2>"$OUT.stderr"; then
+  :
+else
+  need_cmd tmux
+  tmux capture-pane -p -t "$SESSION" -S - > "$OUT"
+fi
+printf '{"ok":true,"session":"%s","capture":"%s"}\n' "$SESSION" "$OUT"

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "strata.context_state.v2_simplified_runtime",
+  "title": "SCTL Context State",
+  "type": "object",
+  "required": [
+    "contract_id",
+    "context_epoch",
+    "current_context_epoch",
+    "context_revision",
+    "class_a_revision",
+    "class_b_revision",
+    "current_class_b_revision",
+    "context_update_policy"
+  ],
+  "properties": {
+    "contract_id": { "const": "strata.context_state.v2_simplified_runtime" },
+    "context_epoch": { "type": "integer", "minimum": 1 },
+    "current_context_epoch": { "type": "integer", "minimum": 0 },
+    "context_revision": { "type": "integer", "minimum": 0 },
+    "class_a_revision": { "type": "integer", "minimum": 0 },
+    "class_b_revision": { "type": "integer", "minimum": 0 },
+    "current_class_b_revision": { "type": "integer", "minimum": 0 },
+    "context_update_policy": { "const": "simple_revision_math" }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "strata.class_c.team_message.v1",
+  "title": "Strata Class C Team Message Contract",
+  "description": "Human team communication carried at the front of deterministic SCTL dispatch envelopes. Class C guides action; exported context carries system state.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "contract_id",
+    "class",
+    "message_id",
+    "thread_id",
+    "assignment_id",
+    "from_role",
+    "from_id",
+    "to_role",
+    "to_id",
+    "message_kind",
+    "status",
+    "created_at"
+  ],
+  "properties": {
+    "contract_id": { "const": "strata.class_c.team_message.v1" },
+    "class": { "const": "C" },
+    "message_id": { "type": "string", "minLength": 1 },
+    "thread_id": { "type": "string", "minLength": 1 },
+    "assignment_id": { "type": "string", "minLength": 1 },
+    "from_role": { "type": "string", "minLength": 1 },
+    "from_id": { "type": "string", "minLength": 1 },
+    "to_role": { "type": "string", "minLength": 1 },
+    "to_id": { "type": "string", "minLength": 1 },
+    "message_kind": {
+      "enum": [
+        "question",
+        "answer",
+        "clarification_request",
+        "qc_feedback",
+        "qc_review_request",
+        "revision_request",
+        "blocker_notice",
+        "handoff_note",
+        "coordination_note",
+        "decision_request",
+        "error_log"
+      ]
+    },
+    "status": { "enum": ["open", "answered", "closed", "superseded"] },
+    "requires_response": { "type": ["boolean", "string"] },
+    "related_class_b": { "type": ["string", "null"] },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "x-dispatch-placement": "The rendered Class C message is placed before the fixed headline: Below is system level full context picture.",
+  "x-context-rule": "Class C is not a context-update mechanism. Context freshness is handled by context.export_markdown and revision math."
+}

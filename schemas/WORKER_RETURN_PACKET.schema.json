@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "worker_return_packet.v1",
+  "title": "Worker Return Packet",
+  "description": "Small session return envelope. It may point to a Class B report, but it is not itself Class B intake authority.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "contract_id",
+    "return_id",
+    "assignment_id",
+    "agent_id",
+    "role",
+    "return_kind",
+    "status",
+    "summary",
+    "nonce",
+    "created_at"
+  ],
+  "properties": {
+    "contract_id": { "const": "worker_return_packet.v1" },
+    "return_id": { "type": "string", "minLength": 1 },
+    "assignment_id": { "type": "string", "minLength": 1 },
+    "agent_id": { "type": "string", "minLength": 1 },
+    "role": { "type": "string", "minLength": 1 },
+    "return_kind": {
+      "enum": [
+        "ACK",
+        "QUESTION",
+        "OPERATIONAL_REPORT_READY",
+        "BLOCKED",
+        "FAILED_WITH_DIAGNOSTIC",
+        "NEEDS_CLARIFICATION",
+        "PARTIAL_STATUS"
+      ]
+    },
+    "status": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string", "minLength": 1 },
+    "nonce": { "type": "string", "minLength": 1 },
+    "report_path": { "type": ["string", "null"] },
+    "message_path": { "type": ["string", "null"] },
+    "question_path": { "type": ["string", "null"] },
+    "diagnostic_path": { "type": ["string", "null"] },
+    "created_at": { "type": "string", "format": "date-time" }
+  },
+  "not": {
+    "anyOf": [
+      { "required": ["evidence_path"] },
+      { "required": ["class_b_intake"] },
+      { "properties": { "return_kind": { "const": "EVIDENCE_READY" } }, "required": ["return_kind"] }
+    ]
+  },
+  "x-operational-report-ready-rule": "OPERATIONAL_REPORT_READY only records that a worker says a report is ready. Class B authority begins only after SCTL validates and commits the report file under .strata/context/B."
+}

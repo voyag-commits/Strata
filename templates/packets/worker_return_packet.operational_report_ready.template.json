@@ -1,0 +1,23 @@
+{
+  "contract_id": "worker_return_packet.v1",
+  "return_id": "ret_<assignment>_<role_id>_<timestamp>",
+  "assignment_id": "<assignment_id>",
+  "agent_id": "<role_instance_id>",
+  "role": "Change Author",
+  "return_kind": "OPERATIONAL_REPORT_READY",
+  "status": "report_ready_not_class_b_intake",
+  "summary": "Concise report-ready notice. Class B remains a validated Git file commit.",
+  "nonce": "<dispatch_nonce>",
+  "report_scope": "actionable_report",
+  "implementation_repository": "TEMPLATE_ONLY",
+  "implementation_commit": null,
+  "trunk_branch": "main",
+  "short_lived_branch": null,
+  "integration_mode": "direct_to_trunk",
+  "supersedes_entry_id": null,
+  "message_path": null,
+  "question_path": null,
+  "report_path": ".strata/returns/<assignment>/<role_instance>/operational_report.md",
+  "diagnostic_path": null,
+  "created_at": "<ISO-8601>"
+}

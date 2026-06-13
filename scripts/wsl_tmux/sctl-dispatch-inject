@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=_sctl_adapter_common.sh
+source "$SCRIPT_DIR/_sctl_adapter_common.sh"
+
+SESSION=""
+PACKET=""
+SEND_ENTER=1
+DRY_RUN=0
+SPAWN_TAB=1
+PASTE_DELAY="${SCTL_DISPATCH_PASTE_DELAY:-5}"
+
+is_wsl() {
+  grep -qiE 'microsoft|wsl' /proc/sys/kernel/osrelease 2>/dev/null || [ -e /proc/sys/fs/binfmt_misc/WSLInterop ]
+}
+
+resolve_wt_exe() {
+  local user="${USER:-$(id -un 2>/dev/null || true)}"
+  local candidate="/mnt/c/Users/${user}/AppData/Local/Microsoft/WindowsApps/wt.exe"
+  [ -f "$candidate" ] && printf '%s\n' "$candidate"
+}
+
+spawn_terminal_tab() {
+  local session="$1"
+  if ! is_wsl; then
+    echo "adapter_terminal_tab_status=not_wsl" >&2
+    return 0
+  fi
+  local wt_path
+  wt_path="$(resolve_wt_exe || true)"
+  if [ -z "$wt_path" ]; then
+    echo "adapter_terminal_tab_status=wt_exe_not_found" >&2
+    return 0
+  fi
+  local quoted_session shell_cmd
+  printf -v quoted_session '%q' "$session"
+  shell_cmd="exec tmux attach -t $quoted_session"
+  if "$wt_path" -w 0 new-tab -- wsl.exe -e bash -c "$shell_cmd" >/tmp/sctl-dispatch-wt.$$ 2>/tmp/sctl-dispatch-wt.err.$$; then
+    echo "adapter_terminal_tab_status=tab_spawned session=$session" >&2
+  else
+    local status=$?
+    echo "adapter_terminal_tab_status=exit_${status} session=$session" >&2
+  fi
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --session) SESSION="$2"; shift 2 ;;
+    --packet|--file) PACKET="$2"; shift 2 ;;
+    --notice) usage_error "--notice is not supported for Markdown packets; use --packet or --file" ;;
+    --no-enter) SEND_ENTER=0; shift ;;
+    --no-tab) SPAWN_TAB=0; shift ;;
+    --paste-delay) PASTE_DELAY="$2"; shift 2 ;;
+    --dry-run) DRY_RUN=1; shift ;;
+    --help) echo "usage: sctl-dispatch-inject --session TMUX_SESSION --packet dispatch_packet.md [--no-enter] [--no-tab] [--paste-delay SECONDS]"; echo "note: --notice is not supported for Markdown packets; use --packet or --file"; exit 0 ;;
+    *) usage_error "unknown argument: $1" ;;
+  esac
+done
+
+[ -n "$SESSION" ] || usage_error "--session required"
+[ -n "$PACKET" ] || usage_error "--packet required"
+[ -f "$PACKET" ] || usage_error "packet file not found: $PACKET"
+[[ "$PASTE_DELAY" =~ ^[0-9]+([.][0-9]+)?$ ]] || usage_error "--paste-delay must be numeric seconds"
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  [ "$SPAWN_TAB" -eq 1 ] && echo "wt.exe -w 0 new-tab -- wsl.exe -e bash -c 'exec tmux attach -t $SESSION'"
+  [ "$PASTE_DELAY" != "0" ] && echo "sleep '$PASTE_DELAY'"
+  echo "tmux load-buffer -b strata '$PACKET'"
+  echo "tmux paste-buffer -p -b strata -t '$SESSION'"
+  [ "$SEND_ENTER" -eq 1 ] && echo "tmux send-keys -t '$SESSION' Enter"
+  exit 0
+fi
+
+need_cmd tmux
+tmux has-session -t "$SESSION" >/dev/null
+[ "$SPAWN_TAB" -eq 1 ] && spawn_terminal_tab "$SESSION"
+[ "$PASTE_DELAY" = "0" ] || sleep "$PASTE_DELAY"
+tmux load-buffer -b strata "$PACKET"
+tmux paste-buffer -p -b strata -t "$SESSION"
+if [ "$SEND_ENTER" -eq 1 ]; then
+  tmux send-keys -t "$SESSION" Enter
+fi
+printf '{"ok":true,"session":"%s","packet":"%s","enter_sent":%s}\n' "$SESSION" "$PACKET" "$SEND_ENTER"

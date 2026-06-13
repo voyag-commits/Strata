@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "strata.dispatch.packet.v2_deterministic_context_export",
+  "title": "SCTL Deterministic Dispatch Packet",
+  "type": "object",
+  "required": [
+    "contract_id",
+    "dispatch_format",
+    "assignment_id",
+    "nonce",
+    "from",
+    "to",
+    "context_export",
+    "runtime_delivery",
+    "dispatch_to_git_is_primary_evidence",
+    "chatbox_inspection_required",
+    "session_policy",
+    "created_at"
+  ],
+  "properties": {
+    "contract_id": { "const": "strata.dispatch.packet.v2_deterministic_context_export" },
+    "dispatch_format": { "const": "deterministic_class_c_plus_context_export_v1" },
+    "assignment_id": { "type": "string", "minLength": 1 },
+    "nonce": { "type": "string", "minLength": 1 },
+    "from": {
+      "type": "object",
+      "required": ["role", "id"],
+      "properties": {
+        "role": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "to": {
+      "type": "object",
+      "required": ["role", "id"],
+      "properties": {
+        "role": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "class_c_message_path": { "type": ["string", "null"] },
+    "context_export": {
+      "type": "object",
+      "required": ["markdown_path", "manifest_path", "empty_context_valid"],
+      "properties": {
+        "markdown_path": { "type": "string" },
+        "manifest_path": { "type": "string" },
+        "source_count": { "type": "integer", "minimum": 0 },
+        "empty_context_valid": { "const": true }
+      }
+    },
+    "runtime_delivery": { "const": "paste_only_deterministic_envelope_ready" },
+    "dispatch_to_git_is_primary_evidence": { "const": true },
+    "chatbox_inspection_required": { "const": false },
+    "session_policy": { "const": "disposable_by_default" },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=_sctl_adapter_common.sh
+source "$SCRIPT_DIR/_sctl_adapter_common.sh"
+
+ASSIGNMENT_ID=""
+ID=""
+SESSION=""
+REASON="disposable session completed"
+KILL_TMUX=0
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --workspace) SCTL_WORKSPACE="$2"; shift 2 ;;
+    --assignment-id) ASSIGNMENT_ID="$2"; shift 2 ;;
+    --id) ID="$2"; shift 2 ;;
+    --session) SESSION="$2"; shift 2 ;;
+    --reason) REASON="$2"; shift 2 ;;
+    --kill-tmux) KILL_TMUX=1; shift ;;
+    --help) echo "usage: sctl-session-retire --assignment-id A001 --id reviewer_001 [--session TMUX] [--kill-tmux]"; exit 0 ;;
+    *) usage_error "unknown argument: $1" ;;
+  esac
+done
+[ -n "$ASSIGNMENT_ID" ] || usage_error "--assignment-id required"
+[ -n "$ID" ] || usage_error "--id required"
+[ -n "$SESSION" ] || SESSION="$ID"
+
+if runtime_edge_cli session terminate --session "$SESSION" >/tmp/sctl-runtime-terminate.$$ 2>/tmp/sctl-runtime-terminate.err.$$; then
+  :
+elif [ "$KILL_TMUX" -eq 1 ]; then
+  need_cmd tmux
+  tmux kill-session -t "$SESSION"
+fi
+
+sctl sessions retire --assignment-id "$ASSIGNMENT_ID" --id "$ID" --reason "$REASON"

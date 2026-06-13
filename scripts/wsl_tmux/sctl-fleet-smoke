@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=_sctl_adapter_common.sh
+source "$SCRIPT_DIR/_sctl_adapter_common.sh"
+
+ASSIGNMENT_ID="A_SMOKE_001"
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --workspace) SCTL_WORKSPACE="$2"; shift 2 ;;
+    --assignment-id) ASSIGNMENT_ID="$2"; shift 2 ;;
+    --help) echo "usage: sctl-fleet-smoke [--workspace DIR] [--assignment-id A_SMOKE_001]"; exit 0 ;;
+    *) usage_error "unknown argument: $1" ;;
+  esac
+done
+
+sctl context bootstrap >/dev/null
+"$SCRIPT_DIR/sctl-session-new" --workspace "$SCTL_WORKSPACE" --assignment-id "$ASSIGNMENT_ID" --role "Reviewer / QC Engineer" --id reviewer_smoke --session-name reviewer_smoke --no-launch >/dev/null
+sctl classb put --id "B_${ASSIGNMENT_ID}_READY" --title "Smoke ready" --assignment-id "$ASSIGNMENT_ID" --agent-id change_author_smoke --role "Change Author" >/dev/null
+MSG_JSON="$(sctl message send --assignment-id "$ASSIGNMENT_ID" --from-role "Change Author" --from-id change_author_smoke --to-role "Reviewer / QC Engineer" --to-id reviewer_smoke --message-kind qc_review_request --body "Review this smoke dispatch.")"
+MSG_FILE="$(printf '%s' "$MSG_JSON" | "$SCTL_NODE" -e 'let s="";process.stdin.on("data",d=>s+=d);process.stdin.on("end",()=>{const j=JSON.parse(s);console.log(j.result.file);});')"
+sctl dispatch record --assignment-id "$ASSIGNMENT_ID" --nonce N1 --target-role "Reviewer / QC Engineer" --target-id reviewer_smoke --message-file "$MSG_FILE" --summary "Smoke deterministic dispatch"

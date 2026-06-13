@@ -1,0 +1,15 @@
+* text=auto
+
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.sh text eol=lf
+*.tsv text eol=lf
+*.jsonl text eol=lf
+*.log text eol=lf
+*.txt text eol=lf
+
+scripts/wsl_tmux/* text eol=lf
+flowmaps/flowmap02/*.sh text eol=lf
+
+*.zip binary

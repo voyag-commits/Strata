@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=_sctl_adapter_common.sh
+source "$SCRIPT_DIR/_sctl_adapter_common.sh"
+
+if [ "$#" -eq 0 ] || [ "${1:-}" = "--help" ]; then
+  cat <<'USAGE'
+usage: sctl-dispatch-render --assignment-id A001 --nonce N1 --target-role ROLE --target-id ID --summary TEXT [--message-file FILE]
+
+Records a deterministic dispatch envelope in SCTL context Git and writes a paste-ready Markdown packet under .strata/dispatch_outbox/.
+USAGE
+  exit 0
+fi
+
+args=()
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --workspace) SCTL_WORKSPACE="$2"; shift 2 ;;
+    *) args+=("$1"); shift ;;
+  esac
+done
+
+sctl dispatch record "${args[@]}"

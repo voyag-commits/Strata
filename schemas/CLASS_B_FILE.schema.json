@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "strata.class_b.file.v1",
+  "title": "Strata Class B Report Contract",
+  "description": "Strict Markdown frontmatter contract for accepted SCTL Class B operational reports. Body validation also requires non-empty required Markdown sections.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "contract_id",
+    "class",
+    "id",
+    "title",
+    "scope",
+    "assignment_id",
+    "agent_id",
+    "role",
+    "status",
+    "evidence",
+    "loaded_context_epoch",
+    "created_at"
+  ],
+  "properties": {
+    "contract_id": { "const": "strata.class_b.file.v1" },
+    "class": { "const": "B" },
+    "id": { "$ref": "#/$defs/safe_segment" },
+    "title": { "type": "string", "minLength": 1 },
+    "scope": {
+      "enum": [
+        "current_operational_state",
+        "release_ledger",
+        "actionable_report",
+        "defect_record",
+        "review_outcome"
+      ]
+    },
+    "assignment_id": { "$ref": "#/$defs/safe_segment" },
+    "agent_id": { "$ref": "#/$defs/safe_segment" },
+    "role": { "type": "string", "minLength": 1 },
+    "status": {
+      "enum": [
+        "draft",
+        "ready",
+        "partial",
+        "blocked",
+        "accepted",
+        "rejected",
+        "failed"
+      ]
+    },
+    "evidence": { "enum": ["included", "none_required"] },
+    "loaded_context_epoch": { "$ref": "#/$defs/non_negative_integer_value" },
+    "created_at": { "$ref": "#/$defs/iso_datetime" },
+    "accepted_class_b_revision": { "$ref": "#/$defs/non_negative_integer_value" },
+    "accepted_at": { "$ref": "#/$defs/iso_datetime" },
+    "required_sections": {
+      "type": "array",
+      "items": { "type": "string" },
+      "contains": { "const": "Evidence" }
+    }
+  },
+  "$defs": {
+    "safe_segment": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "non_negative_integer_value": {
+      "anyOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "string", "pattern": "^[0-9]+$" }
+      ]
+    },
+    "iso_datetime": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "x-required-markdown-sections": [
+    "Operational Summary",
+    "Progress Delta",
+    "Trunk Integration",
+    "Verification",
+    "Evidence",
+    "Risks / Blockers",
+    "Next Action"
+  ],
+  "x-evidence-policy": "The Evidence section is always required. evidence: none_required is allowed only when the Evidence section states why no separate evidence is required."
+}
