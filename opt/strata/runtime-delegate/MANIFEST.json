@@ -1,0 +1,19 @@
+{
+  "contract_id": "strata.runtime_delegate.control_surface_manifest.v1",
+  "name": "strata-runtime-edge-delegate-control-surface",
+  "version": "1.0.0-adr0618",
+  "purpose": "WSL/tmux/Codex runtime delegate control surface for ADR_06_18 SCTL integration",
+  "contract_operations": [
+    "delegate session-register",
+    "delegate session-create",
+    "delegate dispatch-deliver",
+    "delegate return-drop",
+    "delegate return-dir",
+    "delegate session-capture",
+    "delegate session-terminate",
+    "delegate session-list"
+  ],
+  "runtime_signature_source": "wsl_runtime_check_2026-06-25.txt",
+  "default_retire_policy": "kill-session",
+  "notes": "SCTL owns validation, Class A/B commits, context export, canonical envelope rendering, return ingestion, and cycle progression. The delegate only controls runtime endpoints."
+}

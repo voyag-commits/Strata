@@ -1,0 +1,63 @@
+ADR 06/26 note: this file records the 2026-06-25 runtime signature. The ADR 06/26 patch changes normal Flowmap 02 lifecycle semantics so SCTL-created bindings use explicit-only retirement and normal runs do not call session-terminate. Destructive kill-session remains explicit cleanup only.
+
+WSL runtime check — CONFIRMED
+=============================
+Date: 2026-06-25
+Host: WSL (Linux) / tmux / Windows Terminal
+Status: All signatures verified; all four callable boundaries operational.
+
+tmux_target:                    STRATA-DESKTOP-0625-104113:0.0
+tmux_session_name:              STRATA-DESKTOP-0625-104113
+tmux_window_index:              0
+tmux_pane_index:                0
+tmux_pane_id:                   %0
+pane_current_command:           node
+pane_current_path:              /mnt/c/Users/hou16/Downloads/Codex_CLI_agent fleet/strata_runtime_edge_launcher_delegate_component2_3_v0_9/strata_runtime_edge_launcher_delegate_component2_3_v0_9
+codex_visible_in_capture:       yes  (window name "Codex-TUI", pane PID 1191, active Codex CLI session visible in capture)
+
+one_agent_per_tmux_session:     yes  (1 session, 1 window, 1 pane, 1 client on /dev/pts/0)
+retire_policy:                  kill-session  (safe: single pane per session)
+
+launcher_create_command:        /home/hou16/bin/strata-codex-local
+launcher_fleet_command:         /home/hou16/bin/strata-fleet-launch
+codex_command_path:             /home/hou16/.nvm/versions/node/v22.17.1/bin/codex
+tmux_command_path:              /usr/bin/tmux
+
+sctl_workspace:                 /mnt/c/Users/hou16/Downloads/Codex_CLI_agent fleet/strata_runtime_edge_launcher_delegate_component2_3_v0_9/strata_runtime_edge_launcher_delegate_component2_3_v0_9
+return_root:                    .strata/returns/
+expected_assignment_id pattern: A_<DESCRIPTOR>_<TIMESTAMP>_<SEQ>
+expected_session_id pattern:    delegated_coordinator_<NNN>
+
+=== Callable Boundary Confirmation ===
+display-message  : PASS — tmux display-message -t STRATA-DESKTOP-0625-104113:0.0 returns pane metadata
+capture-pane     : PASS — tmux capture-pane -t STRATA-DESKTOP-0625-104113:0.0 -p -S -3 returns output
+send-keys        : PASS — tmux send-keys available for dispatch delivery
+kill-session     : PASS — tmux kill-session available (retire policy)
+kill-pane        : PASS — tmux kill-pane available (alternate retire)
+
+=== Strata Session Naming Convention ===
+Session name:    STRATA-DESKTOP-MMDD-HHMMSS
+Assignment IDs:  A_<DESCRIPTOR>_<TIMESTAMP>_<SEQ>  (e.g., A_FLOWMAP_02_LIVE_DEFAULT_001)
+Session IDs:     delegated_coordinator_<NNN>         (e.g., delegated_coordinator_001)
+Return layouts:  .strata/returns/<assignment_id>/<session_id>/coordinator_work_order.md/{packet.json,work_order.md,operational_report.md}
+
+=== Launcher Signatures ===
+strata-fleet-launch:  --role ROLE, --assignments A B C, --count N, --prefix PREFIX, --layout LETTER|NUM, [--replace|--no-replace], --no-tab
+strata-codex-local:   spawns single Codex CLI in tmux session STRATA-DESKTOP-<timestamp>, window "Codex-TUI"
+strata-codex-linux-desktop:  requires real tty (reports "not a terminal" from within tmux pane)
+
+=== Delegate Contract Bindings ===
+session-register    →  tmux_target = <session_name>:<window>.<pane>  (current: STRATA-DESKTOP-0625-104113:0.0)
+dispatch-deliver    →  tmux send-keys -t "$TARGET" "<payload>" Enter
+session-capture     →  tmux capture-pane -t "$TARGET" -p -S -<lines>
+session-terminate   →  tmux kill-session -t "$SESSION_NAME"
+return-file-drop    →  $SCTL_WORKSPACE/.strata/returns/<assignment_id>/<session_id>/
+
+notes:
+- No SCTL_WORKSPACE env var set; CWD is authoritative workspace root.
+- Window title "Codex-TUI" confirms pane hosts Codex terminal UI.
+- codex binary is Node.js symlink: /home/hou16/.nvm/versions/node/v22.17.1/lib/node_modules/@openai/codex/bin/codex.js
+- Existing return data spans assignments A_FLOWMAP_02_LIVE_DEFAULT_001 and A_STABLE_RUNTIME_EDGE_SHELL_20260619_001.
+- Client bound to /dev/pts/0, xterm-256color, single attached client.
+
+END OF CHECK

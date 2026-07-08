@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=_sctl_adapter_common.sh
+source "$SCRIPT_DIR/_sctl_adapter_common.sh"
+
+ASSIGNMENT_ID=""
+ID=""
+SESSION=""
+PACKET=""
+SEND_ENTER=1
+DRY_RUN=0
+PASTE_DELAY="${SCTL_DISPATCH_PASTE_DELAY:-5}"
+DISPATCH_LOG=""
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --workspace) SCTL_WORKSPACE="$2"; shift 2 ;;
+    --assignment-id) ASSIGNMENT_ID="$2"; shift 2 ;;
+    --id|--session-id) ID="$2"; shift 2 ;;
+    --session) SESSION="$2"; shift 2 ;;
+    --packet|--file) PACKET="$2"; shift 2 ;;
+    --dispatch-log|--out) DISPATCH_LOG="$2"; shift 2 ;;
+    --notice) usage_error "--notice is not supported for Markdown packets; use --packet or --file" ;;
+    --no-enter|--no-submit) SEND_ENTER=0; shift ;;
+    --no-tab) shift ;;
+    --paste-delay) PASTE_DELAY="$2"; shift 2 ;;
+    --dry-run) DRY_RUN=1; shift ;;
+    --help)
+      echo "usage: sctl-dispatch-inject --assignment-id A001 --id logical_session_id --session RUNTIME_SESSION --packet dispatch_packet.md [--no-enter] [--paste-delay SECONDS]"
+      echo "note: delivery is delegated to dispatch-deliver; --session is diagnostic metadata only"
+      exit 0
+      ;;
+    *) usage_error "unknown argument: $1" ;;
+  esac
+done
+
+[ -n "$PACKET" ] || usage_error "--packet required"
+[ -f "$PACKET" ] || usage_error "packet file not found: $PACKET"
+[ -n "$ID" ] || ID="$SESSION"
+[ -n "$ID" ] || usage_error "--id or --session required"
+[[ "$PASTE_DELAY" =~ ^[0-9]+([.][0-9]+)?$ ]] || usage_error "--paste-delay must be numeric seconds"
+
+if [ "$DRY_RUN" -eq 1 ]; then
+  echo "delegate dispatch-deliver --workspace '$SCTL_WORKSPACE' --session-id '$ID' --packet '$PACKET'"
+  exit 0
+fi
+
+[ "$PASTE_DELAY" = "0" ] || sleep "$PASTE_DELAY"
+args=(dispatch-deliver --workspace "$SCTL_WORKSPACE" --session-id "$ID" --packet "$PACKET")
+if [ -n "$DISPATCH_LOG" ]; then args+=(--dispatch-log "$DISPATCH_LOG"); fi
+if [ "$SEND_ENTER" -eq 0 ]; then args+=(--no-submit); fi
+delegate "${args[@]}"

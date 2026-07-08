@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source /etc/profile.d/strata-appliance.sh 2>/dev/null || true
+
+apply=0
+full_workspace_state=0
+workspaces=()
+
+usage() {
+  cat <<'USAGE'
+usage: strata-delegate-clean [--apply] [--full-workspace-state] [WORKSPACE ...]
+
+Dry-run by default. With --apply, removes delegate runtime state owned by the
+selected workspace(s), kills STRATA-* tmux sessions, and removes legacy fallback
+delegate packages. It does not remove the appliance-owned /opt/strata runtime.
+
+Options:
+  --apply                 Actually remove files and kill sessions.
+  --full-workspace-state  Also remove <workspace>/.strata. Use only for a full
+                          workspace reset, not for normal runtime cleanup.
+USAGE
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --apply) apply=1; shift ;;
+    --full-workspace-state) full_workspace_state=1; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) workspaces+=("$1"); shift ;;
+  esac
+done
+
+if [ "${#workspaces[@]}" -eq 0 ]; then
+  workspaces=("${SCTL_WORKSPACE:-$HOME/workspace/sctl-workspace}")
+fi
+
+run_or_print() {
+  if [ "$apply" -eq 1 ]; then
+    "$@"
+  else
+    printf 'DRY-RUN:'
+    printf ' %q' "$@"
+    printf '\n'
+  fi
+}
+
+echo "delegate_clean_apply=$apply"
+
+if command -v tmux >/dev/null 2>&1; then
+  while IFS= read -r session; do
+    [ -n "$session" ] || continue
+    run_or_print tmux kill-session -t "$session"
+  done < <(tmux ls 2>/dev/null | awk -F: '/^STRATA-/ {print $1}')
+else
+  echo "tmux_unavailable=skip"
+fi
+
+for workspace in "${workspaces[@]}"; do
+  echo "workspace=$workspace"
+  run_or_print rm -rf "$workspace/.strata-runtime"
+  run_or_print rm -rf "$workspace/.strata/returns"
+  if [ "$full_workspace_state" -eq 1 ]; then
+    run_or_print rm -rf "$workspace/.strata"
+  fi
+done
+
+run_or_print rm -rf "$HOME/workspace/runtime-delegates/strata-runtime-edge-launcher-delegate-component2-3"
+
+mkdir -p "$HOME/workspace/runtime-delegates" "$HOME/bin"
+if [ "$apply" -eq 1 ]; then
+  ln -sfn /opt/strata/runtime-delegate "$HOME/workspace/runtime-delegates/strata-runtime-edge-delegate-control-surface"
+  ln -sfn /opt/strata/runtime-delegate/dist/src/cli.js "$HOME/bin/strata-runtime-edge-delegate-current"
+else
+  echo "DRY-RUN: ln -sfn /opt/strata/runtime-delegate $HOME/workspace/runtime-delegates/strata-runtime-edge-delegate-control-surface"
+  echo "DRY-RUN: ln -sfn /opt/strata/runtime-delegate/dist/src/cli.js $HOME/bin/strata-runtime-edge-delegate-current"
+fi
+
+echo "delegate_clean_done"

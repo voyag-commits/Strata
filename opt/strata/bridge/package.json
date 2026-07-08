@@ -1,0 +1,41 @@
+{
+  "name": "harness-cli-backend",
+  "version": "0.2.0",
+  "description": "CLI-first Harness backend for managing Codex App Server workers through a local DeepSeek bridge.",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "main": "dist/src/index.js",
+  "bin": {
+    "harness-deepseek-codex-bridge": "dist/src/index.js",
+    "strata": "dist/src/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/src/index.js",
+    "strata": "node dist/src/cli/index.js",
+    "test": "npm run build && node --test dist/tests/*.test.js",
+    "create-assignment": "node dist/src/cli/index.js assignment create",
+    "run-assignment": "node dist/src/cli/index.js assignment run",
+    "runs-list": "node dist/src/cli/index.js runs list",
+    "secret-scan": "node dist/src/cli/index.js secret-scan --workspace ."
+  },
+  "dependencies": {
+    "fastify": "^5.8.5",
+    "undici": "^7.27.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "harness",
+    "codex",
+    "appserver",
+    "deepseek",
+    "cli-backend"
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "strata.dispatch.packet.v3_context_envelope",
+  "title": "SCTL Context Dispatch Envelope Packet",
+  "type": "object",
+  "required": [
+    "contract_id",
+    "dispatch_format",
+    "envelope_type",
+    "assignment_id",
+    "nonce",
+    "from",
+    "to",
+    "fixed_header",
+    "pasted_body_metadata_policy",
+    "context_export",
+    "submission_templates",
+    "runtime_delivery",
+    "dispatch_to_git_is_primary_evidence",
+    "chatbox_inspection_required",
+    "session_policy",
+    "created_at",
+    "markdown_sha256"
+  ],
+  "properties": {
+    "contract_id": { "const": "strata.dispatch.packet.v3_context_envelope" },
+    "dispatch_format": { "const": "sctl.context_dispatch_envelope.v1" },
+    "envelope_type": { "enum": ["initial_task_coordination", "sctl_dispatch"] },
+    "assignment_id": { "type": "string", "minLength": 1 },
+    "nonce": { "type": "string", "minLength": 1 },
+    "from": {
+      "type": "object",
+      "required": ["role", "id"],
+      "properties": {
+        "role": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "to": {
+      "type": "object",
+      "required": ["role", "id"],
+      "properties": {
+        "role": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "session": { "type": ["string", "null"] }
+      }
+    },
+    "fixed_header": { "type": "string", "minLength": 1 },
+    "pasted_body_metadata_policy": { "const": "assignment_id_only" },
+    "source_context": { "type": "object" },
+    "related_class_b": { "type": "array", "items": { "type": "string" } },
+    "declared_files": { "type": "array", "items": { "type": "string" } },
+    "submission_templates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["path", "sha256"],
+        "properties": {
+          "path": { "type": "string" },
+          "absolute_path": { "type": "string" },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        }
+      }
+    },
+    "context_export": {
+      "type": "object",
+      "required": ["markdown_path", "manifest_path", "empty_context_valid"],
+      "properties": {
+        "markdown_path": { "type": "string" },
+        "manifest_path": { "type": "string" },
+        "source_count": { "type": "integer", "minimum": 0 },
+        "empty_context_valid": { "const": true }
+      }
+    },
+    "runtime_delivery": { "const": "paste_only_context_envelope_ready" },
+    "dispatch_to_git_is_primary_evidence": { "const": true },
+    "chatbox_inspection_required": { "const": false },
+    "session_policy": { "const": "disposable_by_default" },
+    "created_at": { "type": "string", "format": "date-time" },
+    "markdown_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  }
+}

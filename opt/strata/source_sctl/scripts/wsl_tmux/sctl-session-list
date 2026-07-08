@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=_sctl_adapter_common.sh
+source "$SCRIPT_DIR/_sctl_adapter_common.sh"
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --workspace) SCTL_WORKSPACE="$2"; shift 2 ;;
+    --help) echo "usage: sctl-session-list [--workspace DIR]"; exit 0 ;;
+    *) usage_error "unknown argument: $1" ;;
+  esac
+done
+delegate session-list --workspace "$SCTL_WORKSPACE"

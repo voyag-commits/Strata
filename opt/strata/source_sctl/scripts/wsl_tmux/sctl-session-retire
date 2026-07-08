@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=_sctl_adapter_common.sh
+source "$SCRIPT_DIR/_sctl_adapter_common.sh"
+
+ASSIGNMENT_ID=""
+ID=""
+SESSION=""
+REASON="disposable session completed"
+STATUS="released"
+TERMINATE_RUNTIME=0
+RETIRE_POLICY="explicit-only"
+
+runtime_retire_policy_for_delegate() {
+  case "$1" in
+    explicit-only|explicit_only|logical-only|none) printf 'kill-session' ;;
+    kill-session|kill-pane|send-exit-then-kill) printf '%s' "$1" ;;
+    *) printf '%s' "$1" ;;
+  esac
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --workspace) SCTL_WORKSPACE="$2"; shift 2 ;;
+    --assignment-id) ASSIGNMENT_ID="$2"; shift 2 ;;
+    --id|--session-id) ID="$2"; shift 2 ;;
+    --session) SESSION="$2"; shift 2 ;;
+    --reason) REASON="$2"; shift 2 ;;
+    --status) STATUS="$2"; shift 2 ;;
+    --retire-policy) RETIRE_POLICY="$2"; shift 2 ;;
+    --terminate-runtime|--kill-tmux) TERMINATE_RUNTIME=1; shift ;;
+    --help)
+      echo "usage: sctl-session-retire --assignment-id A001 --id logical_session_id [--session RUNTIME_SESSION] [--status released|closed|superseded] [--terminate-runtime]"
+      echo "normal retirement records logical release only; runtime termination requires --terminate-runtime"
+      exit 0
+      ;;
+    *) usage_error "unknown argument: $1" ;;
+  esac
+done
+[ -n "$ASSIGNMENT_ID" ] || usage_error "--assignment-id required"
+[ -n "$ID" ] || ID="$SESSION"
+[ -n "$ID" ] || usage_error "--id or --session required"
+
+if [ "$TERMINATE_RUNTIME" -eq 1 ]; then
+  RUNTIME_RETIRE_POLICY="$(runtime_retire_policy_for_delegate "$RETIRE_POLICY")"
+  delegate session-terminate --workspace "$SCTL_WORKSPACE" --session-id "$ID" --retire-policy "$RUNTIME_RETIRE_POLICY" >&2
+else
+  printf 'adapter_runtime_status=runtime_left_alive_explicit_only session_id=%s\n' "$ID" >&2
+fi
+sctl sessions release --assignment-id "$ASSIGNMENT_ID" --id "$ID" --status "$STATUS" --reason "$REASON"

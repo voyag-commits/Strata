@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec node "/opt/strata/source_sctl/src/cli.js" "$@"

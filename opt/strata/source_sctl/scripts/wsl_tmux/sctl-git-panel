@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=_sctl_adapter_common.sh
+source "$SCRIPT_DIR/_sctl_adapter_common.sh"
+WORKSPACE="${SCTL_WORKSPACE:-${SCTL_ROOT:-$(cd "$SCRIPT_DIR/../.." >/dev/null 2>&1 && pwd)}}"
+REPO="sctl"
+TOOL="${SCTL_GIT_PANEL:-git-status}"
+PRINT_COMMAND=0
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --workspace) WORKSPACE="$2"; shift 2 ;;
+    --repo) REPO="$2"; shift 2 ;;
+    --tool|--command) TOOL="$2"; shift 2 ;;
+    --print-command) PRINT_COMMAND=1; shift ;;
+    --help) echo "usage: sctl-git-panel [--workspace DIR] [--repo sctl|codebase] [--tool git-status|lazygit|gitk] [--print-command]"; exit 0 ;;
+    *) usage_error "unknown argument: $1" ;;
+  esac
+done
+args=(node "$SCTL_ROOT/src/cli.js" --workspace "$WORKSPACE" panel git --repo "$REPO" --tool "$TOOL")
+[ "$PRINT_COMMAND" -eq 1 ] && args+=(--print-command)
+"${args[@]}"

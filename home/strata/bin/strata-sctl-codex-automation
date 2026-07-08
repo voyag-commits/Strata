@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+BASE_LAUNCHER="/home/strata/bin/strata-codex-local"
+
+trust_current_workspace() {
+  local codex_home project_dir file
+  codex_home="${CODEX_HOME:-/home/strata/.codex}"
+  project_dir="$(pwd -P)"
+  mkdir -p "$codex_home"
+  for file in "$codex_home/config.toml" "$codex_home/deepseek_bridge.config.toml"; do
+    touch "$file" 2>/dev/null || continue
+    grep -F "[projects.\"$project_dir\"]" "$file" >/dev/null 2>&1 && continue
+    {
+      printf '\n[projects."%s"]\n' "$project_dir"
+      printf 'trust_level = "trusted"\n'
+    } >> "$file"
+  done
+}
+
+case "${1:-}" in
+  -h|--help|-V|--version|version|--bridge-config|--bridge-healthcheck)
+    exec "$BASE_LAUNCHER" "$@"
+    ;;
+esac
+
+trust_current_workspace
+exec "$BASE_LAUNCHER" --dangerously-bypass-approvals-and-sandbox --no-alt-screen "$@"
