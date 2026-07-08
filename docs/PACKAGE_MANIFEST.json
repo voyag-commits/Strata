@@ -1,0 +1,16 @@
+{
+  "name": "strata_sctl_kernel_components_1_3_4_package_v0_9_4_simplified_runtime",
+  "version": "0.9.4-simplified-runtime",
+  "created_at": "2026-06-12T03:29:45Z",
+  "contents_file": "PACKAGE_CONTENTS.txt",
+  "checksums_file": "PACKAGE_CHECKSUMS.sha256",
+  "human_tester_playbook": "HUMAN_TESTER_PLAYBOOK_v0_9_4.md",
+  "launcher_reference_copy": "docs/LAUNCHER_GUIDE_PROVIDED.md",
+  "user_input_reference_copy": "docs/SCTL_USER_INPUTS_MINIMAL_REVISION_v0_9_4.md",
+  "acceptance": {
+    "npm_test": "18/18 passed",
+    "secret_scan": "passed with no findings",
+    "adapter_syntax": "bash -n passed",
+    "adapter_smoke": "metadata-only sctl-fleet-smoke passed"
+  }
+}

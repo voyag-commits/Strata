@@ -1,0 +1,6 @@
+6ed3066 (HEAD -> main, change/A_FLOWMAP_02_007/C03-sample-uniform-sphere-mc) A_FLOWMAP_02_007: replace hit-and-run with Gibbs-sampler MCMC for uniform sphere sampling
+c0d1e79 (change/A_FLOWMAP_02_007/C02-sample-uniform-sphere-mc) A_FLOWMAP_02_007: replace Metropolis-Hastings with hit-and-run MCMC for uniform sphere sampling
+7d3ff6a (change/A_FLOWMAP_02_007/C01-sample-uniform-sphere-mc) A_FLOWMAP_02_007: replace direct sampling with Metropolis-Hastings MCMC based uniform sphere sampling
+ab4b4c9 (change/A_FLOWMAP_02_006/sample-uniform-sphere-v3) A_FLOWMAP_02_006: replace rejection sampling with direct sphere sampling using normalized Gaussian directions
+20b51bb (change/A_FLOWMAP_02_005/sample-uniform-sphere-v2) A_FLOWMAP_02_005: implement sample_uniform_sphere with rejection sampling
+a627f7b Initial commit: student assignment scaffold

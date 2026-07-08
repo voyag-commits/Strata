@@ -1,0 +1,43 @@
+name: SCTL CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  verify:
+    name: npm, secret scan, shell syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install package metadata
+        working-directory: opt/strata/source_sctl
+        run: npm ci || npm install
+
+      - name: Run tests
+        working-directory: opt/strata/source_sctl
+        run: npm test
+
+      - name: Run secret scan
+        working-directory: opt/strata/source_sctl
+        run: npm run secret-scan -- --workspace .
+
+      - name: Check shell syntax
+        run: |
+          set -euo pipefail
+          for script in opt/strata/source_sctl/scripts/wsl_tmux/sctl-* \
+                       opt/strata/source_sctl/flowmaps/flowmap02/*.sh \
+                       opt/strata/source_sctl/scripts/bootstrap_wsl.sh; do
+            [ -f "$script" ] || continue
+            bash -n "$script"
+            echo "bash -n ok: $script"
+          done

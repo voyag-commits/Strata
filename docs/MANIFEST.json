@@ -1,0 +1,536 @@
+﻿{
+    "contract_id":  "strata.sctl.package_manifest.v0_9_4",
+    "package_name":  "strata_sctl_kernel_components_1_3_4_package_v0_9_4_simplified_runtime",
+    "package_version":  "0.9.4-simplified-runtime",
+    "created_at":  "2026-06-12T03:29:45Z",
+    "summary":  "SCTL simplified runtime package with deterministic Class C plus context export dispatch, strict Class B validation, simple context revision math, disposable session policy, Git-backed trace records, and thin WSL/tmux adapters.",
+    "test_summary":  {
+                         "npm_test":  "18/18 passed",
+                         "secret_scan":  "passed with no findings",
+                         "adapter_syntax":  "bash -n passed",
+                         "adapter_smoke":  "metadata-only sctl-fleet-smoke passed"
+                     },
+    "primary_files":  [
+                          "README.md",
+                          "ARCHITECTURE.md",
+                          "CONTRACTS.md",
+                          "HUMAN_TESTER_PLAYBOOK_v0_9_4.md",
+                          "WSL_TMUX_ADAPTERS.md",
+                          "src/cli.js",
+                          "scripts/wsl_tmux/README.md"
+                      ],
+    "file_count_excluding_package_manifests":  101,
+    "excluded_self_describing_files":  [
+                                           "MANIFEST.json",
+                                           "PACKAGE_CHECKSUMS.sha256",
+                                           "PACKAGE_CONTENTS.txt",
+                                           "PACKAGE_MANIFEST.json"
+                                       ],
+    "files":  [
+                  {
+                      "path":  ".env.example",
+                      "size":  91,
+                      "sha256":  "29f14b9898ae8c81182c8105fcdbbea8443de6f101050e91a7a591a1dc16c375"
+                  },
+                  {
+                      "path":  ".gitignore",
+                      "size":  127,
+                      "sha256":  "15b293b1f52caa9e7e5ffdc660ddf6b71fc13e1d88a9a513df6c60ba65fb374c"
+                  },
+                  {
+                      "path":  ".strata/context/A/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/context/B/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/context/C/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/context/C/sessions/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/context/C/sessions/lifecycle/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/context/C/threads/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/context/D_trace/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/context/D_trace/coordination_threads/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/context/D_trace/dispatch_log/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/context/D_trace/dispatch_packets/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/context/D_trace/return_diagnostics/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/context/D_trace/return_ledgers/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/context/D_trace/telemetry/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/dispatch_outbox/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/evidence/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/evidence/secret_scan_2026-06-13T02-19-41-205Z.json",
+                      "size":  65,
+                      "sha256":  "80ada9b4d00311fc0c4db6520824d3add706478bb54e1d3fab64328b61c4b01d"
+                  },
+                  {
+                      "path":  ".strata/exports/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/failures/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata/returns/.gitkeep",
+                      "size":  0,
+                      "sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+                  },
+                  {
+                      "path":  ".strata-runtime/evidence/session_capture/STRATA-REVIEW-A-LIVE-002/2026-06-13_02-19-44-272Z/capture_result.json",
+                      "size":  2808,
+                      "sha256":  "63db209418294231a3147dd0c75d32831173b742c5f213c1c99d96ee5df4d9b6"
+                  },
+                  {
+                      "path":  ".strata-runtime/evidence/session_capture/STRATA-REVIEW-A-LIVE-002/2026-06-13_02-19-44-272Z/pane_capture.txt",
+                      "size":  1822,
+                      "sha256":  "4b15dd27bd47c2c6abec34e3ce917c11c5d51df7cf8e52c011278320d60030b8"
+                  },
+                  {
+                      "path":  "ARCHITECTURE.md",
+                      "size":  3891,
+                      "sha256":  "1ad6a5e085d47a501b76ea69a77a0fffaf30bf5c96d8875bc82e668a60d0f1d3"
+                  },
+                  {
+                      "path":  "CHANGELOG_v0_9_4.md",
+                      "size":  975,
+                      "sha256":  "ce186d425b0c40e03cf1e927308158b43a4bda304f1df4ce95daaae6ba31b12f"
+                  },
+                  {
+                      "path":  "COMPLETION_REPORT_v0_9_4_SCTL_KERNEL.md",
+                      "size":  589,
+                      "sha256":  "9c91f3b2ecb90c88b2f1e480f0e4126ba718c877771b50ca650df180499a957a"
+                  },
+                  {
+                      "path":  "CONTRACTS.md",
+                      "size":  2819,
+                      "sha256":  "9e1aa444211822f7bb6dba1599ef4097f2b1c9c5e05482c2f2c285cae8639f2b"
+                  },
+                  {
+                      "path":  "DELIVERY_README.md",
+                      "size":  875,
+                      "sha256":  "0323bb83ae599bc00900472d668e5d58452c76c06e9faca60b40a1d1bd12b40a"
+                  },
+                  {
+                      "path":  "docs/LAUNCHER_GUIDE_PROVIDED.md",
+                      "size":  6467,
+                      "sha256":  "19faf386fdf4fd623cb855daf6df2c85e6a04fe07be745b764b7f46a607c565f"
+                  },
+                  {
+                      "path":  "docs/SCTL_USER_INPUTS_MINIMAL_REVISION_v0_9_4.md",
+                      "size":  5684,
+                      "sha256":  "9dd7b99af08c79fdf41dd475dab832c397013bfd6af9963009968a25454f1eaf"
+                  },
+                  {
+                      "path":  "HUMAN_TESTER_PLAYBOOK_v0_9_4.md",
+                      "size":  9478,
+                      "sha256":  "89698c6c7a3d4c62b3d1f2405d8d1854aaaa1b145b2590f4560c46d0f63c557d"
+                  },
+                  {
+                      "path":  "MIGRATION_NOTES.md",
+                      "size":  1032,
+                      "sha256":  "3efb98dbf1d89f978b131d5d6f5853bbe383048729a36fb928bdea85261e9956"
+                  },
+                  {
+                      "path":  "OPERATIONAL_SMOKE_RESULT_v0_9_4.json",
+                      "size":  1051,
+                      "sha256":  "01f431e8df547475658d25507143656d85b967a98eb720c770b162355600f40c"
+                  },
+                  {
+                      "path":  "OPERATIONAL_TEST_REPORT_v0_9_4.md",
+                      "size":  1020,
+                      "sha256":  "a256eab0d6ab1231932f7030c71f94f60a6dfc5f79e17e9ebcdaa4573f927509"
+                  },
+                  {
+                      "path":  "package.json",
+                      "size":  928,
+                      "sha256":  "72f57a0c679ca5b90dbe4cafeaa5cb8978f4582bb8f115792f84ea9bbde67b9f"
+                  },
+                  {
+                      "path":  "PACKAGE_SHA_NOTE.md",
+                      "size":  233,
+                      "sha256":  "176d22a550e9766f5d3500853b4cfc8d87679daebaf57e0c866022a7d5532335"
+                  },
+                  {
+                      "path":  "package-lock.json",
+                      "size":  436,
+                      "sha256":  "6a7c56967fcd6ae66a4c9865401e12f5405371dad242bde23f4a7646ce454406"
+                  },
+                  {
+                      "path":  "README.md",
+                      "size":  5283,
+                      "sha256":  "d006d48a28591fb87ed4a74a565e6e363c4c0b8fd74e407788b20ba9c94d2244"
+                  },
+                  {
+                      "path":  "scripts/wsl_tmux/_sctl_adapter_common.sh",
+                      "size":  1084,
+                      "sha256":  "64aba001344d3197e1d91317b43f0f16fe46a3f2e0d1b4eb78325838ac7e49f1"
+                  },
+                  {
+                      "path":  "scripts/wsl_tmux/README.md",
+                      "size":  2769,
+                      "sha256":  "aed463807f0af04859ad2e995bf593fc92bd76b727e73006549e6fcbb7289914"
+                  },
+                  {
+                      "path":  "scripts/wsl_tmux/sctl-dispatch-inject",
+                      "size":  3131,
+                      "sha256":  "4a41cb20cd40e6c4063cf18cc8276c42b47f531a813a68e14f5c81f17303d523"
+                  },
+                  {
+                      "path":  "scripts/wsl_tmux/sctl-dispatch-render",
+                      "size":  730,
+                      "sha256":  "b814d63e919eaae4e82b920d7f904a22b6864671b93ae9cb58cd951a7fca2107"
+                  },
+                  {
+                      "path":  "scripts/wsl_tmux/sctl-fleet-smoke",
+                      "size":  1564,
+                      "sha256":  "c3a588f62865b04df43031889d2565c916433ede91a0a065e54cde4b7040ba53"
+                  },
+                  {
+                      "path":  "scripts/wsl_tmux/sctl-session-capture",
+                      "size":  921,
+                      "sha256":  "cfc9e1bcbb42f39a2433838dfed5bb000ffff199e30a6627766ac22cbbe6f42a"
+                  },
+                  {
+                      "path":  "scripts/wsl_tmux/sctl-session-new",
+                      "size":  1896,
+                      "sha256":  "95a55fd99850036ec4d49cdd994a1cd2ae9d3027aa3fc98fdcf2acaa63007cc9"
+                  },
+                  {
+                      "path":  "scripts/wsl_tmux/sctl-session-retire",
+                      "size":  1216,
+                      "sha256":  "bff70d086b0e1510b09fd1de189f7a85dfc823b86cbe10703162cf7b907967b4"
+                  },
+                  {
+                      "path":  "specifications/ADR-0610-delta-backend.md",
+                      "size":  723,
+                      "sha256":  "88b4752b0de3609cd63d528a3882685845abf01b4bd4a931e89a29f1e557c058"
+                  },
+                  {
+                      "path":  "specifications/Canonical architecture separation.md",
+                      "size":  774,
+                      "sha256":  "82ceddd4b922527d80deb67c47b9fd60758a51a0c52c2f286b151ee24972b5e5"
+                  },
+                  {
+                      "path":  "specifications/CLASS_B_FILE.schema.json",
+                      "size":  2523,
+                      "sha256":  "8f929442bdd293defb841377eea564440fe501d7177a5885f3c46df847156c04"
+                  },
+                  {
+                      "path":  "specifications/CLASS_C_TEAM_MESSAGE.schema.json",
+                      "size":  1962,
+                      "sha256":  "4b6b82bf3bbd53d6f02848febc50d3946e87888733b2c60b784de525d81d5dbc"
+                  },
+                  {
+                      "path":  "specifications/CONTEXT_STATE.schema.json",
+                      "size":  936,
+                      "sha256":  "5ec604e59f8a68dc0bd5f9e6175ba8917d8e8e0a29ad2017175c4bd59f51fbe1"
+                  },
+                  {
+                      "path":  "specifications/DISPATCH_PACKET.schema.json",
+                      "size":  1960,
+                      "sha256":  "cccdfb712789fe1f90d77c621b1ea36d0bdd7e00dc56de85ce97696504ee7f5f"
+                  },
+                  {
+                      "path":  "specifications/DOCTRINE.md",
+                      "size":  1197,
+                      "sha256":  "fe84537aa8c97a4e5ab7156825d6b1e5f4fdd529c37c9c6beae36c8f51295ee3"
+                  },
+                  {
+                      "path":  "specifications/TELEMETRY_EVENT.schema.json",
+                      "size":  538,
+                      "sha256":  "06750e0692735173e37057771633e2ca472cff3994750bf5b52cb71dcbf5e1e3"
+                  },
+                  {
+                      "path":  "specifications/tester_playbook/ACCEPTANCE_MATRIX.md",
+                      "size":  1073,
+                      "sha256":  "d61f0e4cb572020aab6385cd415d331b2cdabe306aa47f7ee9bcaf124df2e462"
+                  },
+                  {
+                      "path":  "specifications/tester_playbook/COMMAND_CATALOG_FOR_TESTING.md",
+                      "size":  2482,
+                      "sha256":  "7819eeb1fc0421aae1fbf0f5b4bffef93c6c3a8f83b06449cd6ce4dd3f95641b"
+                  },
+                  {
+                      "path":  "specifications/tester_playbook/LIVE_TEST_PLAYBOOK.md",
+                      "size":  685,
+                      "sha256":  "f0c566864f6b82aa5edfd1f4ec6ea1ae9e8bff78890d1f651ce68349c4392925"
+                  },
+                  {
+                      "path":  "specifications/tester_playbook/LIVE_WSL_TMUX_HUMAN_PLAYBOOK.md",
+                      "size":  9478,
+                      "sha256":  "89698c6c7a3d4c62b3d1f2405d8d1854aaaa1b145b2590f4560c46d0f63c557d"
+                  },
+                  {
+                      "path":  "specifications/tester_playbook/README.md",
+                      "size":  231,
+                      "sha256":  "36c6b1223be91c6974ef27a3dbc460d001aca54fc07322aed03b64a945d51208"
+                  },
+                  {
+                      "path":  "specifications/tester_playbook/templates/failure_artifact_checklist.md",
+                      "size":  196,
+                      "sha256":  "3eb43ff0990292f58421464f85e0e2c762793cb4428d84a09cb68e3c013b0d3e"
+                  },
+                  {
+                      "path":  "specifications/tester_playbook/templates/live_run_manifest.template.json",
+                      "size":  269,
+                      "sha256":  "654349ada15adfb12590b6095e03807d7d12535a87264cf78a2c7cb33bcbad64"
+                  },
+                  {
+                      "path":  "specifications/tester_playbook/TEST_REPORT_TEMPLATE.md",
+                      "size":  682,
+                      "sha256":  "4c1c5731563838d9b7a205872472b2dbb6761ddac6aa6efd94b3a0fa328a48ea"
+                  },
+                  {
+                      "path":  "specifications/tester_playbook/TESTING_STANDARD.md",
+                      "size":  975,
+                      "sha256":  "b9317c4bfa3824972d19147bb041ba84b17f2c409224a5b63eba2dbcc70fd51c"
+                  },
+                  {
+                      "path":  "specifications/TRUNK_BASED_WORK_DISCIPLINE.md",
+                      "size":  745,
+                      "sha256":  "99b1d5115644e13b85087959a2ad57c38948266e6efbea409abb777867b80b21"
+                  },
+                  {
+                      "path":  "specifications/WORK_PROTOCOL.md",
+                      "size":  974,
+                      "sha256":  "725fe804a5332553b13229a7805688120ea31b5768c19387d60a1624e862af5b"
+                  },
+                  {
+                      "path":  "specifications/WORKER_RETURN_PACKET.schema.json",
+                      "size":  1906,
+                      "sha256":  "9aabe97976d4483982242c430501621d29e8af225a3a89483fb716c682fb8e0a"
+                  },
+                  {
+                      "path":  "src/cli.js",
+                      "size":  9727,
+                      "sha256":  "1acb922d648b2b7fd64f5711c523d63915f95576af726b6b35d065ae5c6efcb5"
+                  },
+                  {
+                      "path":  "src/lib/classb.js",
+                      "size":  11254,
+                      "sha256":  "5e6192d3bd1feb3cb5da6065f9dd6f11b9296b55fce3dbfb99e5ffbe340fa2fe"
+                  },
+                  {
+                      "path":  "src/lib/common.js",
+                      "size":  7407,
+                      "sha256":  "7b97fc375b8c0d96ba7bccac54d1f2f48fb0fba7d3c97a7a6eac18337e69be22"
+                  },
+                  {
+                      "path":  "src/lib/context.js",
+                      "size":  11289,
+                      "sha256":  "00630d1578c2acf5d2b727e96b334ea46160d921d2d2060575cfdd6c39fca922"
+                  },
+                  {
+                      "path":  "src/lib/dispatch_outbox.js",
+                      "size":  11978,
+                      "sha256":  "950db898f3b3df943fd570484e0e7e35bd4827d5335a3bedc5e66077757d6330"
+                  },
+                  {
+                      "path":  "src/lib/export.js",
+                      "size":  4950,
+                      "sha256":  "b98805d3de4a8de6859657bc373ab6e408174facef1b5e527a2b2b068c0fea80"
+                  },
+                  {
+                      "path":  "src/lib/fixtures.js",
+                      "size":  9262,
+                      "sha256":  "f74ec66ccac64f12804e6d9bf33951a3c1f63d81de3611df2efb3ae7b18a27e6"
+                  },
+                  {
+                      "path":  "src/lib/layout.js",
+                      "size":  1682,
+                      "sha256":  "c6fc7dc1121b8d520bdb91f9812837a23da0ff2a1286797897d7df46715106e3"
+                  },
+                  {
+                      "path":  "src/lib/messages.js",
+                      "size":  9997,
+                      "sha256":  "c1d709a667cfdeefdfd1086b048b600e88457a3b8109e651c393a92b8af43af6"
+                  },
+                  {
+                      "path":  "src/lib/protocol.js",
+                      "size":  4019,
+                      "sha256":  "fdf965112abeab1a9e2e89a332627ef954491e42c32746474c2d0972fa4d0b4d"
+                  },
+                  {
+                      "path":  "src/lib/reports.js",
+                      "size":  2705,
+                      "sha256":  "6edb6678803b4432274d0cb202d2583246599f8335eff1ca15270d11ac10921f"
+                  },
+                  {
+                      "path":  "src/lib/secret_scan.js",
+                      "size":  1361,
+                      "sha256":  "761a3375c4de9291cb47a208811f55d3993b8873827706920aa2cd3d0fcad109"
+                  },
+                  {
+                      "path":  "src/lib/telemetry.js",
+                      "size":  449,
+                      "sha256":  "b2517e0c99953556fd5f57ee22863e0a589e68820ce31764070e2e65e7df33c6"
+                  },
+                  {
+                      "path":  "src/lib/tools.js",
+                      "size":  3477,
+                      "sha256":  "00b8929f06e40b709575983761006fa2b12c7a1bbebe307e845902356ed51418"
+                  },
+                  {
+                      "path":  "src/lib/worker_returns.js",
+                      "size":  12925,
+                      "sha256":  "8c553e019e3e28c76f0ed0fc4d4ae20a845f07372f70f07c7657bb5d86e0ea1a"
+                  },
+                  {
+                      "path":  "templates/director_communication/director_communication_request.template.md",
+                      "size":  128,
+                      "sha256":  "7270162dc0b47bf993515c75859a44153bd46b36e16782f8247c6cb894293de6"
+                  },
+                  {
+                      "path":  "templates/dispatch/deterministic_dispatch_envelope.template.md",
+                      "size":  473,
+                      "sha256":  "ea726d2979942460388f9009e9bddd318ec9984629cc73af3061ddd625e5e4f6"
+                  },
+                  {
+                      "path":  "templates/messages/class_c_team_message.template.md",
+                      "size":  742,
+                      "sha256":  "fd78263274f49416776da7cec5eae162a8a892963e6a1ac23c6b26ed77049506"
+                  },
+                  {
+                      "path":  "templates/packets/worker_return_packet.operational_report_ready.template.json",
+                      "size":  859,
+                      "sha256":  "f487f58034f47272f0c8a5992b5ffa62cbc61b00f30a4ace14ca80b673b29bdb"
+                  },
+                  {
+                      "path":  "templates/reports/operational_report.template.md",
+                      "size":  921,
+                      "sha256":  "f704f5e8b58fe1971e85b2fa05b581e47ba9d24acb03f7bfcb4d826b3fcc9cc7"
+                  },
+                  {
+                      "path":  "templates/reports/review_outcome.template.md",
+                      "size":  735,
+                      "sha256":  "e0a89dda4d060238b0bbbe5556a06ca21d3fd31e65fdb194d9b93167fe11afb6"
+                  },
+                  {
+                      "path":  "templates/role_assignment/change_author_bootstrap_message.md",
+                      "size":  1083,
+                      "sha256":  "c2a3b8c8c7375d849bf33a8e6941e22366fdb49f3f449ebc7016f142f03433b5"
+                  },
+                  {
+                      "path":  "templates/role_assignment/director_bootstrap_message.md",
+                      "size":  555,
+                      "sha256":  "814280bc3aa4832cb027ec09a5f269595efd28c2eef9033fd87e397c0afc0a66"
+                  },
+                  {
+                      "path":  "templates/role_assignment/release_configuration_owner_bootstrap_message.md",
+                      "size":  677,
+                      "sha256":  "da217905faf01840597d7c90615ca8bbf488679e13e365cbf4979e9f458fd5ca"
+                  },
+                  {
+                      "path":  "templates/role_assignment/reviewer_verifier_bootstrap_message.md",
+                      "size":  853,
+                      "sha256":  "fdd60d5b8d727f56cba38fbe82d8e9228f8529639b93aefe770638f24b2b0259"
+                  },
+                  {
+                      "path":  "templates/role_assignment/tech_lead_coordination_owner_bootstrap_message.md",
+                      "size":  980,
+                      "sha256":  "3e4b0a363eb6ebb463d1f9e8e11262ff27394e78046eb30708822feccd860c33"
+                  },
+                  {
+                      "path":  "templates/role_assignment/tooling_dispatch_operator_bootstrap_message.md",
+                      "size":  769,
+                      "sha256":  "c8dd54dbfd803628d098be522334c93bd457539cfe80b60210ee15fe36f49e51"
+                  },
+                  {
+                      "path":  "tests/classb_git_file.test.js",
+                      "size":  4553,
+                      "sha256":  "8bf7e48cf87a5f900865f1a3c6cbe7b6270cd279039844ba3349e3057047889c"
+                  },
+                  {
+                      "path":  "tests/cli_smoke.test.js",
+                      "size":  2614,
+                      "sha256":  "6a6015656998f5b82078351896512d67a29a71c234878e36e106796247a57fcb"
+                  },
+                  {
+                      "path":  "tests/context_epoch.test.js",
+                      "size":  1886,
+                      "sha256":  "293c8973dc258371e05a7d952332d05d0a547aa86842621a38e7a4bba5f7e581"
+                  },
+                  {
+                      "path":  "tests/dispatch_tools_fixtures.test.js",
+                      "size":  3055,
+                      "sha256":  "afe0162ea3cebd20407bd6777c403db41f4361c8155fd143fc07fdbfd04ba96b"
+                  },
+                  {
+                      "path":  "tests/message_notice_dispatch.test.js",
+                      "size":  3589,
+                      "sha256":  "eca9ed5771ce475a1fbd4aab117e128f1712bf42d6778eb01832bc2fa4f067fe"
+                  },
+                  {
+                      "path":  "tests/tool_registry_boundary.test.js",
+                      "size":  494,
+                      "sha256":  "601a8d580f71359ad35d2245ce536e4ab4b73f4b38c9392c639c6f67ccbbf09c"
+                  },
+                  {
+                      "path":  "tests/worker_return_operational_report_ready.test.js",
+                      "size":  4016,
+                      "sha256":  "34837261b3eac3a75b56e31ef803221d420ccd547acfa2ed631a316774593013"
+                  },
+                  {
+                      "path":  "WSL_TMUX_ADAPTERS.md",
+                      "size":  2673,
+                      "sha256":  "d772c02e05eb2df007d357f3b75b24d1fb14b900e4f03f25e59372b70647b09c"
+                  }
+              ]
+}
