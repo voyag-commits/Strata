@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BRIDGE_DIR="/opt/strata/bridge"
+BRIDGE_ENTRY="$BRIDGE_DIR/dist/src/index.js"
+BRIDGE_ENV="/home/strata/.codex-deepseek/bridge.env"
+BRIDGE_LOG="/home/strata/.codex-deepseek/wsl-bridge.log"
+BRIDGE_ERR="/home/strata/.codex-deepseek/wsl-bridge.err"
+BRIDGE_PID="/home/strata/.codex-deepseek/wsl-bridge.pid"
+CODEX_BIN="${CODEX_BIN:-codex}"
+PROFILE_NAME="${CODEX_PROFILE_NAME:-deepseek_bridge}"
+PORT="${PORT:-38441}"
+
+export PATH="/home/strata/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+export NO_PROXY="localhost,127.0.0.1,::1,${NO_PROXY:-}"
+export no_proxy="$NO_PROXY"
+
+load_env_file() {
+  if [[ ! -f "$BRIDGE_ENV" ]]; then
+    echo "missing bridge env: $BRIDGE_ENV" >&2
+    exit 20
+  fi
+  while IFS='=' read -r key value; do
+    key="${key//$'\r'/}"
+    key="${key#$'\xef\xbb\xbf'}"
+    value="${value//$'\r'/}"
+    [[ -z "$key" || "${key:0:1}" == "#" ]] && continue
+    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+    export "$key=$value"
+  done < "$BRIDGE_ENV"
+  PORT="${PORT:-38441}"
+  if [[ -n "${UPSTREAM_PROXY_URL:-}" ]]; then
+    export HTTPS_PROXY="$UPSTREAM_PROXY_URL"
+    export HTTP_PROXY="$UPSTREAM_PROXY_URL"
+    export https_proxy="$UPSTREAM_PROXY_URL"
+    export http_proxy="$UPSTREAM_PROXY_URL"
+  fi
+  if [[ -z "${BRIDGE_AUTH_KEY:-}" ]]; then
+    echo "BRIDGE_AUTH_KEY missing from bridge env" >&2
+    exit 21
+  fi
+}
+
+bridge_ready() {
+  curl -fs --noproxy "localhost,127.0.0.1,::1" --max-time 3 "http://127.0.0.1:${PORT}/health" >/dev/null
+}
+
+start_bridge() {
+  if [[ ! -f "$BRIDGE_ENTRY" ]]; then
+    echo "bridge entry missing: $BRIDGE_ENTRY" >&2
+    exit 22
+  fi
+  mkdir -p "$(dirname "$BRIDGE_LOG")"
+  rm -f "$BRIDGE_LOG" "$BRIDGE_ERR"
+  (cd "$BRIDGE_DIR" && setsid nohup node "$BRIDGE_ENTRY" >"$BRIDGE_LOG" 2>"$BRIDGE_ERR" < /dev/null & echo "$!" > "$BRIDGE_PID")
+  for _ in $(seq 1 50); do
+    bridge_ready && return 0
+    sleep 0.5
+  done
+  echo "bridge did not become ready on port $PORT" >&2
+  tail -n 30 "$BRIDGE_LOG" >&2 2>/dev/null || true
+  tail -n 30 "$BRIDGE_ERR" >&2 2>/dev/null || true
+  exit 23
+}
+
+case "${1:-}" in
+  -h|--help)
+    exec "$CODEX_BIN" "$@"
+    ;;
+  -V|--version|version)
+    exec "$CODEX_BIN" --version
+    ;;
+  --bridge-config)
+    load_env_file
+    echo "bridge_dir=$BRIDGE_DIR"
+    echo "bridge_entry=$BRIDGE_ENTRY"
+    echo "profile=$PROFILE_NAME"
+    echo "port=$PORT"
+    echo "model=${DEEPSEEK_MODEL:-}"
+    echo "thinking=${DEEPSEEK_ENABLE_THINKING:-}"
+    echo "thinking_budget=${DEEPSEEK_THINKING_BUDGET:-}"
+    echo "reasoning_effort=${DEEPSEEK_REASONING_EFFORT:-}"
+    echo "proxy_configured=$([[ -n "${UPSTREAM_PROXY_URL:-}" ]] && echo yes || echo no)"
+    echo "api_key_configured=$([[ -n "${DEEPSEEK_API_KEY:-}" ]] && echo yes || echo no)"
+    exit 0
+    ;;
+  --bridge-healthcheck)
+    load_env_file
+    bridge_ready || start_bridge
+    bridge_ready
+    echo "OK bridge health port=$PORT profile=$PROFILE_NAME"
+    exit 0
+    ;;
+esac
+
+load_env_file
+bridge_ready || start_bridge
+exec "$CODEX_BIN" --profile "$PROFILE_NAME" "$@"

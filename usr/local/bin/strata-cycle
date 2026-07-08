@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CALLER_SCTL_RUNTIME_LAUNCH_CONFIG="${SCTL_RUNTIME_LAUNCH_CONFIG:-}"
+CALLER_STRATA_WORKSPACE="${STRATA_WORKSPACE:-}"
+CALLER_CODEBASE_REPO="${CODEBASE_REPO:-}"
+source /etc/profile.d/strata-appliance.sh 2>/dev/null || true
+[ -z "$CALLER_SCTL_RUNTIME_LAUNCH_CONFIG" ] || SCTL_RUNTIME_LAUNCH_CONFIG="$CALLER_SCTL_RUNTIME_LAUNCH_CONFIG"
+[ -z "$CALLER_STRATA_WORKSPACE" ] || STRATA_WORKSPACE="$CALLER_STRATA_WORKSPACE"
+[ -z "$CALLER_CODEBASE_REPO" ] || CODEBASE_REPO="$CALLER_CODEBASE_REPO"
+
+PACKAGE_ROOT="${STRATA_PACKAGE_ROOT:-/opt/strata/source_sctl}"
+DELEGATE_ROOT="${SCTL_RUNTIME_DELEGATE_ROOT:-/opt/strata/runtime-delegate}"
+DELEGATE_BIN="${SCTL_RUNTIME_DELEGATE_BIN:-$DELEGATE_ROOT/dist/src/cli.js}"
+LAUNCH_CONFIG="${SCTL_RUNTIME_LAUNCH_CONFIG:-$HOME/workspace/codebase/.strata-runtime/config/launcher_delegate.local.json}"
+WORKSPACE="${STRATA_WORKSPACE:-$HOME/workspace/sctl-workspace}"
+CODEBASE="${CODEBASE_REPO:-$HOME/workspace/codebase}"
+RUNS_DIR="$HOME/workspace/runs"
+PID_FILE="$RUNS_DIR/live_cycle.pid"
+
+usage() {
+  cat <<'USAGE'
+usage: strata-cycle <command> [options]
+
+Commands:
+  start --director-entry FILE [--assignment-id ID] [--cycles N] [--background]
+        [--return-timeout SECONDS] [--poll-interval SECONDS] [--paste-delay SECONDS]
+        [--open-inject-tab] [--keep-runtime-sessions]
+  stop [--assignment-id ID]
+  status
+
+The real Director Entry should be copied to:
+  ~/director_entry/director_governing_entry.md
+USAGE
+}
+
+assignment_default() {
+  date -u +"A_APPLIANCE_%Y%m%dT%H%M%SZ"
+}
+
+command_start() {
+  local director_entry="$HOME/director_entry/director_governing_entry.md"
+  local assignment_id=""
+  local cycles="1"
+  local background=0
+  local return_timeout=""
+  local poll_interval=""
+  local paste_delay=""
+  local open_inject_tab=0
+  local keep_runtime_sessions=0
+  local no_artifact_freshness=0
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --director-entry) director_entry="$2"; shift 2 ;;
+      --assignment-id) assignment_id="$2"; shift 2 ;;
+      --cycles) cycles="$2"; shift 2 ;;
+      --background) background=1; shift ;;
+      --return-timeout) return_timeout="$2"; shift 2 ;;
+      --poll-interval) poll_interval="$2"; shift 2 ;;
+      --paste-delay) paste_delay="$2"; shift 2 ;;
+      --open-inject-tab) open_inject_tab=1; shift ;;
+      --keep-runtime-sessions) keep_runtime_sessions=1; shift ;;
+      --no-artifact-freshness) no_artifact_freshness=1; shift ;;
+      *) echo "error: unknown start option: $1" >&2; exit 2 ;;
+    esac
+  done
+  [ -n "$assignment_id" ] || assignment_id="$(assignment_default)"
+  [ -f "$director_entry" ] || { echo "error: Director Entry not found: $director_entry" >&2; exit 2; }
+  mkdir -p "$RUNS_DIR"
+  local log="$RUNS_DIR/${assignment_id}.log"
+  local run_root="$RUNS_DIR/${assignment_id}_$(date -u +%Y%m%dT%H%M%SZ)"
+  local args=(
+    "$PACKAGE_ROOT/flowmaps/flowmap02/live_cycle_harness.sh"
+    --assignment-id "$assignment_id"
+    --package-root "$PACKAGE_ROOT"
+    --runtime-delegate-root "$DELEGATE_ROOT"
+    --runtime-delegate-bin "$DELEGATE_BIN"
+    --runtime-launch-config "$LAUNCH_CONFIG"
+    --sctl-workspace "$WORKSPACE"
+    --codebase-repo "$CODEBASE"
+    --director-entry-source "$director_entry"
+    --short-name "appliance-cycle"
+    --cycles "$cycles"
+    --run-root "$run_root"
+    --skip-npm-test
+    --skip-adapter-syntax
+  )
+  if [ -n "$return_timeout" ]; then args+=(--return-timeout "$return_timeout"); fi
+  if [ -n "$poll_interval" ]; then args+=(--poll-interval "$poll_interval"); fi
+  if [ -n "$paste_delay" ]; then args+=(--paste-delay "$paste_delay"); fi
+  if [ "$open_inject_tab" -eq 1 ]; then args+=(--open-inject-tab); fi
+  if [ "$keep_runtime_sessions" -eq 1 ]; then args+=(--keep-runtime-sessions); fi
+  if [ "$no_artifact_freshness" -eq 1 ]; then args+=(--no-artifact-freshness); fi
+
+  if [ "$background" -eq 1 ]; then
+    nohup bash "${args[@]}" >"$log" 2>&1 < /dev/null &
+    echo "$!" > "$PID_FILE"
+    echo "OK cycle started background pid=$(cat "$PID_FILE") assignment=$assignment_id log=$log"
+  else
+    echo "Starting cycle assignment=$assignment_id log=$log"
+    bash "${args[@]}" 2>&1 | tee "$log"
+  fi
+}
+
+command_stop() {
+  local assignment_id=""
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      --assignment-id) assignment_id="$2"; shift 2 ;;
+      *) echo "error: unknown stop option: $1" >&2; exit 2 ;;
+    esac
+  done
+  if [ -s "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
+    kill "$(cat "$PID_FILE")" || true
+    rm -f "$PID_FILE"
+    echo "OK live harness process stopped"
+  else
+    rm -f "$PID_FILE"
+    echo "OK no live harness pid"
+  fi
+  if [ -n "$assignment_id" ]; then
+    (tmux ls 2>/dev/null || true) | awk -F: -v a="$assignment_id" '$1 ~ a {print $1}' | while read -r s; do
+      [ -n "$s" ] && tmux kill-session -t "$s" 2>/dev/null || true
+    done
+  fi
+}
+
+command_status() {
+  echo "SCTL workspace: $WORKSPACE"
+  echo "Codebase repo:   $CODEBASE"
+  echo "Delegate bin:    $DELEGATE_BIN"
+  echo "Launch config:   $LAUNCH_CONFIG"
+  if [ -s "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
+    echo "cycle_process=running pid=$(cat "$PID_FILE")"
+  else
+    echo "cycle_process=stopped"
+  fi
+  echo "tmux_sessions:"
+  tmux ls 2>/dev/null || true
+}
+
+case "${1:-}" in
+  start) shift; command_start "$@" ;;
+  stop) shift; command_stop "$@" ;;
+  status) command_status ;;
+  -h|--help|help|"") usage ;;
+  *) echo "error: unknown command: $1" >&2; usage >&2; exit 2 ;;
+esac

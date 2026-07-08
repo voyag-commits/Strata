@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=_sctl_adapter_common.sh
+source "$SCRIPT_DIR/_sctl_adapter_common.sh"
+
+ASSIGNMENT_ID=""
+ID=""
+SESSION=""
+OUT=""
+LINES=200
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --workspace) SCTL_WORKSPACE="$2"; shift 2 ;;
+    --assignment-id) ASSIGNMENT_ID="$2"; shift 2 ;;
+    --id|--session-id) ID="$2"; shift 2 ;;
+    --session) SESSION="$2"; shift 2 ;;
+    --out) OUT="$2"; shift 2 ;;
+    --lines) LINES="$2"; shift 2 ;;
+    --help) echo "usage: sctl-session-capture --id logical_session_id [--session RUNTIME_SESSION] [--out FILE] [--lines N]"; exit 0 ;;
+    *) usage_error "unknown argument: $1" ;;
+  esac
+done
+[ -n "$ID" ] || ID="$SESSION"
+[ -n "$ID" ] || usage_error "--id or --session required"
+[[ "$LINES" =~ ^[0-9]+$ ]] || usage_error "--lines must be an integer"
+
+TMP_JSON="$(mktemp)"
+delegate session-capture --workspace "$SCTL_WORKSPACE" --session-id "$ID" --lines "$LINES" > "$TMP_JSON"
+if [ -n "$OUT" ]; then
+  CAPTURE_REL="$(json_get "$TMP_JSON" capture_path 2>/dev/null || printf '')"
+  if [ -n "$CAPTURE_REL" ]; then
+    CAPTURE_ABS="$CAPTURE_REL"
+    case "$CAPTURE_ABS" in /*) ;; *) CAPTURE_ABS="$SCTL_WORKSPACE/$CAPTURE_ABS" ;; esac
+    mkdir -p "$(dirname "$OUT")"
+    cp "$CAPTURE_ABS" "$OUT"
+  fi
+fi
+cat "$TMP_JSON"
+rm -f "$TMP_JSON"

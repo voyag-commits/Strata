@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source /etc/profile.d/strata-appliance.sh 2>/dev/null || true
+
+BRIDGE_ENV="${STRATA_CODEX_BRIDGE_ENV:-$HOME/.codex-deepseek/bridge.env}"
+API_HOST="${STRATA_APPLIANCE_API_HOST:-127.0.0.1}"
+API_PORT="${STRATA_APPLIANCE_API_PORT:-8765}"
+API_PID="${XDG_RUNTIME_DIR:-/tmp}/strata-appliance-api.pid"
+API_LOG="$HOME/.strata-appliance-api.log"
+API_SERVER="${STRATA_APPLIANCE_ROOT:-/opt/strata}/appliance/appliance_api_server.mjs"
+VERIFY_SCRIPT="${STRATA_APPLIANCE_ROOT:-/opt/strata}/appliance/verify_appliance.sh"
+LAUNCHER="${STRATA_CODEX_LAUNCHER:-$HOME/bin/strata-codex-local}"
+
+usage() {
+  cat <<'USAGE'
+usage: strata-appliance <command>
+
+Commands:
+  configure-key [KEY]    Store the DeepSeek API key and ensure local bridge auth.
+  status                 Show key/API/bridge status without printing secrets.
+  bridge-config          Show current bridge defaults.
+  start-api              Start local-only appliance API on 127.0.0.1.
+  stop-api               Stop local API.
+  api-health             Query local API /health.
+  verify                 Run appliance verification.
+USAGE
+}
+
+load_env_value() {
+  local key="$1"
+  awk -F= -v k="$key" '$1 == k {print substr($0, length(k) + 2)}' "$BRIDGE_ENV" 2>/dev/null | tail -n 1
+}
+
+set_env_value() {
+  local env_key="$1" env_value="$2" tmp
+  mkdir -p "$(dirname "$BRIDGE_ENV")"
+  touch "$BRIDGE_ENV"
+  chmod 600 "$BRIDGE_ENV"
+  tmp="$(mktemp)"
+  awk -v k="$env_key" -v v="$env_value" 'BEGIN{done=0} $0 ~ "^" k "=" {print k "=" v; done=1; next} {print} END{if(!done) print k "=" v}' "$BRIDGE_ENV" > "$tmp"
+  cat "$tmp" > "$BRIDGE_ENV"
+  rm -f "$tmp"
+  chmod 600 "$BRIDGE_ENV"
+}
+
+ensure_bridge_auth_key() {
+  local auth
+  auth="$(load_env_value BRIDGE_AUTH_KEY)"
+  if [ -z "$auth" ]; then
+    auth="dsk-$(openssl rand -hex 24)"
+    set_env_value BRIDGE_AUTH_KEY "$auth"
+  fi
+}
+
+write_key() {
+  local key="$1"
+  if [ -z "$key" ]; then
+    echo "error: empty DeepSeek API key" >&2
+    exit 2
+  fi
+  set_env_value DEEPSEEK_API_KEY "$key"
+  ensure_bridge_auth_key
+  chmod 600 "$BRIDGE_ENV"
+}
+
+api_running() {
+  [ -s "$API_PID" ] && kill -0 "$(cat "$API_PID")" 2>/dev/null
+}
+
+case "${1:-}" in
+  configure-key)
+    key="${2:-}"
+    if [ -z "$key" ]; then
+      printf "DeepSeek API key: " >&2
+      IFS= read -rs key
+      printf "\n" >&2
+    fi
+    write_key "$key"
+    echo "OK DeepSeek API key stored in $BRIDGE_ENV"
+    ;;
+  status)
+    key_set="no"
+    [ -n "$(load_env_value DEEPSEEK_API_KEY)" ] && key_set="yes"
+    api_status="stopped"
+    api_running && api_status="running pid=$(cat "$API_PID")"
+    bridge_status="not_checked"
+    if curl -fs --noproxy "localhost,127.0.0.1,::1" --max-time 2 "http://127.0.0.1:$(load_env_value PORT)/health" >/dev/null 2>&1; then
+      bridge_status="running"
+    else
+      bridge_status="stopped"
+    fi
+    cat <<EOF
+Strata appliance status
+key_configured=$key_set
+api=$api_status
+api_url=http://$API_HOST:$API_PORT
+bridge=$bridge_status
+bridge_port=$(load_env_value PORT)
+sctl_workspace=${STRATA_WORKSPACE:-}
+codebase_repo=${CODEBASE_REPO:-}
+director_entry=$HOME/director_entry/director_governing_entry.md
+EOF
+    ;;
+  bridge-config)
+    "$LAUNCHER" --bridge-config
+    ;;
+  start-api)
+    if api_running; then
+      echo "OK API already running pid=$(cat "$API_PID")"
+      exit 0
+    fi
+    mkdir -p "$(dirname "$API_PID")"
+    nohup node "$API_SERVER" >"$API_LOG" 2>&1 < /dev/null &
+    echo "$!" > "$API_PID"
+    sleep 0.8
+    if api_running; then
+      echo "OK API started http://$API_HOST:$API_PORT pid=$(cat "$API_PID")"
+    else
+      echo "FAIL API did not start; see $API_LOG" >&2
+      exit 1
+    fi
+    ;;
+  stop-api)
+    if api_running; then
+      kill "$(cat "$API_PID")" || true
+      rm -f "$API_PID"
+      echo "OK API stopped"
+    else
+      rm -f "$API_PID"
+      echo "OK API already stopped"
+    fi
+    ;;
+  api-health)
+    curl -fsS --noproxy "localhost,127.0.0.1,::1" "http://$API_HOST:$API_PORT/health"
+    echo
+    ;;
+  verify)
+    exec "$VERIFY_SCRIPT"
+    ;;
+  -h|--help|help|"")
+    usage
+    ;;
+  *)
+    echo "error: unknown command: $1" >&2
+    usage >&2
+    exit 2
+    ;;
+esac

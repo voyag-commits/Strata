@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "strata.telemetry.workflow_event.v1",
+  "title": "SCTL Workflow Telemetry Event",
+  "type": "object",
+  "required": ["ts", "event", "result"],
+  "properties": {
+    "ts": { "type": "string" },
+    "event": { "type": "string" },
+    "result": { "type": "string" },
+    "assignment_id": { "type": ["string", "null"] },
+    "nonce": { "type": ["string", "null"] },
+    "target_id": { "type": ["string", "null"] },
+    "git_commit": { "type": ["string", "null"] }
+  }
+}

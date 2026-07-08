@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source /etc/profile.d/strata-appliance.sh 2>/dev/null || true
+
+workspace="${1:-${SCTL_WORKSPACE:-$HOME/workspace/sctl-workspace}}"
+delegate_root="${SCTL_RUNTIME_DELEGATE_ROOT:-/opt/strata/runtime-delegate}"
+delegate_bin="${SCTL_RUNTIME_DELEGATE_BIN:-$delegate_root/dist/src/cli.js}"
+compat_root="$HOME/workspace/runtime-delegates/strata-runtime-edge-delegate-control-surface"
+compat_bin="$HOME/bin/strata-runtime-edge-delegate-current"
+launch_config="${SCTL_RUNTIME_LAUNCH_CONFIG:-$HOME/workspace/codebase/.strata-runtime/config/launcher_delegate.local.json}"
+fail=0
+
+check() {
+  local name="$1"; shift
+  if "$@"; then
+    echo "OK $name"
+  else
+    echo "FAIL $name"
+    fail=1
+  fi
+}
+
+json_session_count() {
+  python3 -c 'import json,sys; data=json.load(sys.stdin); print(len(data.get("sessions") or data.get("result", {}).get("sessions") or []))'
+}
+
+check "delegate_package_dir" test -d "$delegate_root"
+check "delegate_cli_file" test -f "$delegate_bin"
+version="$(node -p "require('$delegate_root/package.json').version" 2>/dev/null || true)"
+if [ "$version" = "1.0.0-adr0618" ]; then
+  echo "OK delegate_version=$version"
+else
+  echo "FAIL delegate_version=$version expected=1.0.0-adr0618"
+  fail=1
+fi
+
+if [ -f "$delegate_root/PACKAGE_CHECKSUMS.sha256" ]; then
+  if (cd "$delegate_root" && sha256sum -c PACKAGE_CHECKSUMS.sha256 >/tmp/strata_delegate_checksums.log 2>&1); then
+    echo "OK delegate_checksums"
+  else
+    echo "FAIL delegate_checksums /tmp/strata_delegate_checksums.log"
+    fail=1
+  fi
+else
+  echo "WARN delegate_checksums_missing"
+fi
+
+if node "$delegate_bin" --help | head -1 | grep -q "Strata Runtime Edge Delegate Control Surface"; then
+  echo "OK delegate_help"
+else
+  echo "FAIL delegate_help"
+  fail=1
+fi
+
+if [ -L "$compat_root" ] && [ "$(readlink -f "$compat_root")" = "$delegate_root" ]; then
+  echo "OK compat_root=$compat_root"
+else
+  echo "FAIL compat_root=$compat_root target=$(readlink -f "$compat_root" 2>/dev/null || true)"
+  fail=1
+fi
+
+if [ -L "$compat_bin" ] && [ "$(readlink -f "$compat_bin")" = "$delegate_bin" ]; then
+  echo "OK compat_bin=$compat_bin"
+else
+  echo "FAIL compat_bin=$compat_bin target=$(readlink -f "$compat_bin" 2>/dev/null || true)"
+  fail=1
+fi
+
+session_json="$(node "$delegate_bin" delegate session-list --workspace "$workspace")"
+session_count="$(printf '%s' "$session_json" | json_session_count)"
+if [ "$session_count" = "0" ]; then
+  echo "OK session_list_empty"
+else
+  echo "FAIL session_list_count=$session_count"
+  fail=1
+fi
+
+if tmux ls 2>/dev/null | grep -q '^STRATA-'; then
+  echo "FAIL live_STRATA_tmux_sessions"
+  tmux ls 2>/dev/null | grep '^STRATA-' || true
+  fail=1
+else
+  echo "OK no_STRATA_tmux_sessions"
+fi
+
+if node "$delegate_bin" provider doctor --workspace "$workspace" --config "$launch_config" --skip-healthcheck >/tmp/strata_provider_doctor.log 2>&1; then
+  echo "OK provider_doctor_skip_healthcheck"
+else
+  echo "FAIL provider_doctor_skip_healthcheck /tmp/strata_provider_doctor.log"
+  fail=1
+fi
+
+if [ "$fail" -eq 0 ]; then
+  echo "delegate_clean_check=passed"
+else
+  echo "delegate_clean_check=failed"
+fi
+exit "$fail"

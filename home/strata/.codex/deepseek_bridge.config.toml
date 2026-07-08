@@ -1,0 +1,22 @@
+model = "deepseek-v4-pro"
+model_provider = "deepseek_bridge"
+approval_policy = "never"
+sandbox_mode = "danger-full-access"
+model_context_window = 128000
+model_max_output_tokens = 32768
+model_reasoning_effort = "xhigh"
+
+[model_providers.deepseek_bridge]
+name = "DeepSeek via local Responses bridge"
+base_url = "http://127.0.0.1:38449/v1"
+wire_api = "responses"
+env_key = "BRIDGE_AUTH_KEY"
+
+[projects."/home/strata"]
+trust_level = "trusted"
+
+[projects."/home/strata/workspace/sctl-workspace"]
+trust_level = "trusted"
+
+[tui.model_availability_nux]
+"gpt-5.5" = 4

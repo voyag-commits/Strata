@@ -1,0 +1,31 @@
+# Secrets — never commit
+home/strata/.codex-deepseek/bridge.env
+**/bridge.env
+*.env
+!**/*.env.template
+!bridge.env.template
+
+# Runtime state (regenerated at runtime, not source)
+home/strata/.codex/*.sqlite*
+home/strata/.codex/history.jsonl
+home/strata/.codex/sessions/
+home/strata/.codex/.tmp/
+home/strata/.codex/tmp/
+home/strata/.codex/shell_snapshots/
+home/strata/.codex-deepseek/wsl-bridge.log
+home/strata/.codex-deepseek/wsl-bridge.err
+home/strata/.codex-deepseek/wsl-bridge.pid
+home/strata/.codex-deepseek/trace/
+
+# Regenerable node_modules (install via npm)
+**/node_modules/
+
+# WSL distro tarballs (distributed via GitHub Releases, not git)
+MyDistro-*.tar
+*.tar
+!_sctl_code_extract.tar
+
+# Editor/OS cruft
+.DS_Store
+*.swp
+*~

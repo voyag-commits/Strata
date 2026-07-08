@@ -1,0 +1,43 @@
+{
+  "name": "strata-runtime-edge-delegate-control-surface",
+  "version": "1.0.0-adr0618",
+  "description": "Strata runtime delegate control surface for WSL tmux Codex sessions, implementing the ADR_06_18 runtime session delegate contract.",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "main": "dist/src/cli.js",
+  "bin": {
+    "strata-runtime-edge": "dist/src/cli.js",
+    "strata-codex-delegate": "dist/src/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "npm run clean && npm run build && node --test --test-concurrency=1 --test-reporter spec dist/tests/*.test.js",
+    "secret-scan": "node scripts/secret_scan.mjs",
+    "clean": "rm -rf dist",
+    "verify": "npm test && npm run secret-scan"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "strata",
+    "runtime-edge",
+    "launcher-delegate",
+    "byor",
+    "codex-cli",
+    "deepseek",
+    "tmux",
+    "adr0610",
+    "adr0618",
+    "runtime-delegate",
+    "control-surface",
+    "wsl",
+    "session-register"
+  ]
+}

@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+# shellcheck source=_sctl_adapter_common.sh
+source "$SCRIPT_DIR/_sctl_adapter_common.sh"
+
+ASSIGNMENT_ID=""
+ROLE=""
+ID=""
+SESSION_NAME=""
+SESSION_NAME_EXPLICIT=0
+SESSION_MODE="disposable"
+CYCLE_ID=""
+RUNTIME_ROLE=""
+NO_LAUNCH=0
+RESOLVE_EXISTING=0
+REPLACE=0
+RETIRE_POLICY="explicit-only"
+RUNTIME_LAUNCH_CONFIG="${SCTL_RUNTIME_LAUNCH_CONFIG:-}"
+SESSION_EXTRA_ARGS="${SCTL_RUNTIME_SESSION_EXTRA_ARGS:-}"
+
+runtime_retire_policy_for_delegate() {
+  case "$1" in
+    explicit-only|explicit_only|logical-only|none) printf 'kill-session' ;;
+    kill-session|kill-pane|send-exit-then-kill) printf '%s' "$1" ;;
+    *) printf '%s' "$1" ;;
+  esac
+}
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --workspace) SCTL_WORKSPACE="$2"; shift 2 ;;
+    --assignment-id) ASSIGNMENT_ID="$2"; shift 2 ;;
+    --role) ROLE="$2"; shift 2 ;;
+    --id|--session-id) ID="$2"; shift 2 ;;
+    --session-name|--tmux-target) SESSION_NAME="$2"; SESSION_NAME_EXPLICIT=1; shift 2 ;;
+    --session-mode) SESSION_MODE="$2"; shift 2 ;;
+    --cycle-id) CYCLE_ID="$2"; shift 2 ;;
+    --runtime-role) RUNTIME_ROLE="$2"; shift 2 ;;
+    --runtime-launch-config|--config) RUNTIME_LAUNCH_CONFIG="$2"; shift 2 ;;
+    --runtime-session-extra-args|--extra-args) SESSION_EXTRA_ARGS="$2"; shift 2 ;;
+    --retire-policy) RETIRE_POLICY="$2"; shift 2 ;;
+    --no-launch) NO_LAUNCH=1; shift ;;
+    --resolve-existing) RESOLVE_EXISTING=1; shift ;;
+    --replace) REPLACE=1; shift ;;
+    --help)
+      echo "usage: sctl-session-new --assignment-id A001 --role ROLE --id ID [--session-name TMUX] [--session-mode disposable|long_running] [--cycle-id CYCLE] [--resolve-existing] [--no-launch]"
+      exit 0
+      ;;
+    *) usage_error "unknown argument: $1" ;;
+  esac
+done
+
+[ -n "$ASSIGNMENT_ID" ] || usage_error "--assignment-id required"
+[ -n "$ROLE" ] || usage_error "--role required"
+[ -n "$ID" ] || usage_error "--id required"
+[ -n "$RUNTIME_ROLE" ] || RUNTIME_ROLE="$(runtime_role_for_sctl "$ROLE")"
+[ -n "$SESSION_NAME" ] || SESSION_NAME="$ID"
+
+RETURN_DIR_REL=".strata/returns/$ASSIGNMENT_ID/$ID"
+mkdir -p "$SCTL_WORKSPACE/$RETURN_DIR_REL"
+TMP_JSON="$(mktemp)"
+RUNTIME_RETIRE_POLICY="$(runtime_retire_policy_for_delegate "$RETIRE_POLICY")"
+
+if [ "$NO_LAUNCH" -eq 1 ]; then
+  delegate session-register \
+    --workspace "$SCTL_WORKSPACE" \
+    --assignment-id "$ASSIGNMENT_ID" \
+    --cycle-id "$CYCLE_ID" \
+    --role "$RUNTIME_ROLE" \
+    --session-id "$ID" \
+    --tmux-target "$SESSION_NAME" \
+    --session-mode "existing_wsl_tmux" \
+    --retire-policy "$RUNTIME_RETIRE_POLICY" > "$TMP_JSON"
+else
+  args=(session-create
+    --workspace "$SCTL_WORKSPACE"
+    --assignment-id "$ASSIGNMENT_ID"
+    --cycle-id "$CYCLE_ID"
+    --role "$RUNTIME_ROLE"
+    --session-id "$ID"
+    --session-mode "live_tmux"
+    --retire-policy "$RUNTIME_RETIRE_POLICY")
+  if [ "$SESSION_NAME_EXPLICIT" -eq 1 ]; then args+=(--session-name "$SESSION_NAME"); fi
+  if [ -n "$RUNTIME_LAUNCH_CONFIG" ]; then args+=(--config "$RUNTIME_LAUNCH_CONFIG"); fi
+  if [ -n "$SESSION_EXTRA_ARGS" ]; then args+=(--extra-args "$SESSION_EXTRA_ARGS"); fi
+  if [ "$RESOLVE_EXISTING" -eq 1 ]; then args+=(--resolve-existing); fi
+  if [ "$REPLACE" -eq 1 ]; then args+=(--replace); fi
+  delegate "${args[@]}" > "$TMP_JSON"
+fi
+
+RUNTIME_SESSION_NAME="$(json_get "$TMP_JSON" tmux_session_name 2>/dev/null || json_get "$TMP_JSON" runtime_session_name 2>/dev/null || printf '%s' "$SESSION_NAME")"
+TMUX_TARGET="$(json_get "$TMP_JSON" tmux_target 2>/dev/null || printf '%s' "$RUNTIME_SESSION_NAME")"
+EVIDENCE_PATH="$(json_get "$TMP_JSON" evidence_path 2>/dev/null || printf '')"
+BINDING_STATUS="$(json_get "$TMP_JSON" status 2>/dev/null || printf 'registered')"
+[ -n "$RUNTIME_SESSION_NAME" ] || usage_error "delegate did not return tmux_session_name/runtime_session_name"
+
+SCTL_JSON="$(mktemp)"
+sctl sessions register \
+  --assignment-id "$ASSIGNMENT_ID" \
+  --role "$ROLE" \
+  --id "$ID" \
+  --session-name "$RUNTIME_SESSION_NAME" \
+  --runtime-session-name "$RUNTIME_SESSION_NAME" \
+  --runtime-role "$RUNTIME_ROLE" \
+  --runtime-tmux-target "$TMUX_TARGET" \
+  --runtime-binding-id "$ID" \
+  --runtime-binding-status "$BINDING_STATUS" \
+  --delegate-evidence-path "$EVIDENCE_PATH" \
+  --session-mode "$SESSION_MODE" \
+  --runtime "delegate_control_surface" \
+  --return-dir "$RETURN_DIR_REL" \
+  --termination-policy "explicit_only" > "$SCTL_JSON"
+
+printf 'adapter_delegate_evidence=%s\n' "$EVIDENCE_PATH" >&2
+cat "$SCTL_JSON"
+rm -f "$TMP_JSON" "$SCTL_JSON"

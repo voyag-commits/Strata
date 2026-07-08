@@ -1,0 +1,5 @@
+export STRATA_BASE_LAUNCHER_COMMAND="/home/strata/bin/strata-codex-local"
+export STRATA_CODEX_BRIDGE_ENV="/home/strata/.codex-deepseek/bridge.env"
+export STRATA_CODEX_BRIDGE_DIR="/home/strata/strata/bridge/bridge"
+export STRATA_CODEX_LAUNCHER="/home/strata/bin/strata-codex-local"
+export CODEX_PROFILE_NAME="deepseek_bridge"

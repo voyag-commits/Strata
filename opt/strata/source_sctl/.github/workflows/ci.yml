@@ -1,0 +1,42 @@
+name: SCTL CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  verify:
+    name: npm, secret scan, shell syntax
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install package metadata
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Run secret scan
+        run: npm run secret-scan
+
+      - name: Check shell syntax
+        run: |
+          set -euo pipefail
+          for script in scripts/wsl_tmux/sctl-* flowmaps/flowmap02/*.sh scripts/bootstrap_wsl.sh; do
+            [ -f "$script" ] || continue
+            bash -n "$script"
+            echo "bash -n ok: $script"
+          done
+
+      - name: Verify package checksums
+        run: sha256sum -c PACKAGE_CHECKSUMS.sha256

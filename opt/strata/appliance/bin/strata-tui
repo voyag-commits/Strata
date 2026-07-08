@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+source /etc/profile.d/strata-appliance.sh 2>/dev/null || true
+
+DIRECTOR_ENTRY="${STRATA_DIRECTOR_ENTRY:-$HOME/director_entry/director_governing_entry.md}"
+DIRECTOR_TEMPLATE="$HOME/director_entry/director_governing_entry.md.example"
+
+pause() {
+  echo
+  read -r -p "按 Enter 继续..." _
+}
+
+ensure_director_entry() {
+  mkdir -p "$(dirname "$DIRECTOR_ENTRY")"
+  if [ -f "$DIRECTOR_ENTRY" ]; then
+    return 0
+  fi
+  if [ -f "$DIRECTOR_TEMPLATE" ]; then
+    cp "$DIRECTOR_TEMPLATE" "$DIRECTOR_ENTRY"
+    echo "已创建 Director Entry 模板：$DIRECTOR_ENTRY"
+    echo "请先把这里改成真实任务内容，再运行 Codex cycle。"
+    return 1
+  fi
+  echo "找不到 Director Entry：$DIRECTOR_ENTRY"
+  return 1
+}
+
+edit_director_entry() {
+  ensure_director_entry || true
+  "${EDITOR:-nano}" "$DIRECTOR_ENTRY"
+}
+
+run_codex_cycle() {
+  local cycles="$1"
+  local assignment
+  assignment="A_CODEX_TUI_$(date -u +%Y%m%dT%H%M%SZ)"
+  ensure_director_entry || return 1
+  strata-appliance start-api
+  strata-codex-local --bridge-healthcheck
+  STRATA_OPEN_INJECT_TAB="${STRATA_OPEN_INJECT_TAB:-1}" \
+    strata-cycle start \
+      --director-entry "$DIRECTOR_ENTRY" \
+      --assignment-id "$assignment" \
+      --cycles "$cycles" \
+      --allow-merge \
+      --return-timeout "${STRATA_TUI_RETURN_TIMEOUT:-900}" \
+      --poll-interval "${STRATA_TUI_POLL_INTERVAL:-2}" \
+      --paste-delay "${STRATA_TUI_PASTE_DELAY:-1}" \
+      --open-inject-tab \
+      --validation-command "${STRATA_VALIDATION_COMMAND:-git status --short}"
+}
+
+while true; do
+  clear || true
+  cat <<'EOF'
+SCTL A004 控制台
+===============
+EOF
+  strata-appliance status || true
+  cat <<EOF
+
+Director Entry:
+  $DIRECTOR_ENTRY
+
+请选择操作:
+  1) 启动本地 API / Bridge 服务
+  2) 跑 1 次真实 Codex cycle（可见窗口）
+  3) 跑 10 次真实 Codex cycle（可见窗口）
+  4) 编辑 Director Entry
+  5) 配置 DeepSeek API Key
+  6) 打开 Codex TUI
+  7) 打开 Shell
+  q) 退出
+
+EOF
+  read -r -p "> " choice
+  case "$choice" in
+    1)
+      strata-appliance start-api
+      strata-codex-local --bridge-healthcheck || true
+      pause
+      ;;
+    2)
+      run_codex_cycle 1
+      pause
+      ;;
+    3)
+      run_codex_cycle 10
+      pause
+      ;;
+    4)
+      edit_director_entry
+      ;;
+    5)
+      strata-appliance configure-key
+      pause
+      ;;
+    6)
+      exec strata-codex-local
+      ;;
+    7)
+      exec bash -l
+      ;;
+    q|Q)
+      exit 0
+      ;;
+    *)
+      echo "未知选项: $choice"
+      pause
+      ;;
+  esac
+done
