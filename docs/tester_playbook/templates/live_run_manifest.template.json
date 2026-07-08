@@ -1,0 +1,9 @@
+{
+  "contract_id": "strata.sctl.live_run_manifest.v1",
+  "run_id": "<RUN_ID>",
+  "assignment_id": "<ASSIGNMENT_ID>",
+  "required_runtime_sessions": [],
+  "runtime_sessions_external_package": true,
+  "boc_default_required": false,
+  "evidence_root": "<EVIDENCE_ROOT>"
+}
